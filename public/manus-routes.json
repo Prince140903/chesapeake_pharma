@@ -1,0 +1,21 @@
+{
+  "routes": [
+    { "path": "/", "title": "Chesapeake Pharma" },
+    { "path": "/about", "title": "About Chesapeake Pharma" },
+    { "path": "/leadership", "title": "Leadership" },
+    { "path": "/services", "title": "Services" },
+    { "path": "/drug-insights", "title": "Drug Insights" },
+    { "path": "/clients", "title": "Clients" },
+    { "path": "/contact", "title": "Contact" },
+    { "path": "/login", "title": "Client Login" },
+    { "path": "/register", "title": "Request Database Access" },
+    { "path": "/forgot-password", "title": "Reset Access" },
+    { "path": "/access-pending", "title": "Access Pending" },
+    { "path": "/portal", "title": "Drug Intelligence Database" },
+    { "path": "/portal/db1", "title": "DB1 Search" },
+    { "path": "/portal/db2", "title": "DB2 Search" },
+    { "path": "/portal/db1/:id", "title": "DB1 Record Detail" },
+    { "path": "/portal/db2/:id", "title": "DB2 Record Detail" },
+    { "path": "/admin", "title": "Admin Console" }
+  ]
+}
