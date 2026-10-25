@@ -14,11 +14,12 @@ body { margin: 0; background: #f5f8fa; color: #163449; font-family: var(--font-i
 }
 
 @layer components {
-  .container-shell { @apply mx-auto w-full max-w-[1180px] px-5 sm:px-8 lg:px-10; }
+  .container-shell { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
   .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.2em] text-teal; }
   .section-rule { @apply border-t border-line; }
   .focus-ring { @apply focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal/20; }
-  .button-primary { @apply focus-ring inline-flex items-center justify-center rounded-full bg-navy px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#164d6b]; }
-  .button-secondary { @apply focus-ring inline-flex items-center justify-center rounded-full border border-line bg-white px-5 py-3 text-sm font-semibold text-navy transition hover:border-teal hover:bg-aqua; }
+  .button-primary { @apply focus-ring inline-flex items-center justify-center rounded-lg bg-[#135C70] px-5 py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#0B3B48] shadow-sm hover:shadow-md active:scale-[0.98]; }
+  .button-secondary { @apply focus-ring inline-flex items-center justify-center rounded-lg border border-line bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-navy transition hover:border-teal hover:bg-aqua active:scale-[0.98]; }
   .input-control { @apply focus-ring w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted/70; }
 }
+

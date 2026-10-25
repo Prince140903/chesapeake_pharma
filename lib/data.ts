@@ -75,10 +75,12 @@ export const services = [
 ];
 
 export const navItems = [
-  { label: "About", href: "/about" },
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "/about" },
   { label: "Leadership", href: "/leadership" },
   { label: "Services", href: "/services" },
-  { label: "Drug insights", href: "/drug-insights" },
+  { label: "Drug Insights", href: "/drug-insights" },
   { label: "Clients", href: "/clients" },
   { label: "Contact", href: "/contact" }
 ];
+

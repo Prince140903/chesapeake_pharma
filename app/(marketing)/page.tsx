@@ -1,16 +1,401 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, FlaskConical, Layers3, Network, ShieldCheck, Sparkles } from "lucide-react";
-import { services } from "@/lib/data";
-import { firmCopy } from "@/lib/content";
-import { SectionIntro } from "@/components/ui";
-
-const icons = [BarChart3, FlaskConical, Network, Layers3];
+import Image from "next/image";
+import { ArrowRight, FileText, CheckCircle2 } from "lucide-react";
+import { TealWedge } from "@/components/ui";
+import {
+  CommercialStrategyIcon,
+  DrugDeliveryIcon,
+  BusinessDevIcon,
+  CompetitiveIntelIcon,
+  MerckLogoBadge,
+  NovartisLogoBadge,
+} from "@/components/reference-icons";
 
 export default function HomePage() {
-  return <>
-    <section className="relative overflow-hidden border-b border-line bg-white"><div className="container-shell grid min-h-[650px] items-center gap-16 py-20 lg:grid-cols-[1.02fr_.98fr] lg:py-24"><div className="relative z-10"><div className="inline-flex items-center gap-2 rounded-full border border-teal/30 bg-aqua px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[#07546A]"><Sparkles size={13} /> Decision-ready intelligence</div><p className="eyebrow mt-8">{firmCopy.eyebrow}</p><h1 className="mt-5 max-w-3xl text-5xl font-bold leading-[1.02] text-navy sm:text-6xl lg:text-[68px]">{firmCopy.title}</h1><p className="mt-7 max-w-xl text-lg leading-8 text-muted">{firmCopy.description}</p><div className="mt-9 flex flex-col gap-3 sm:flex-row"><Link href="/contact" className="button-primary gap-2">Schedule a consultation <ArrowRight size={16} /></Link><Link href="/services" className="button-secondary">Explore our services</Link></div><div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-xs font-semibold text-muted"><span className="inline-flex items-center gap-2"><ShieldCheck size={15} className="text-teal" /> Practical and confidential</span><span className="inline-flex items-center gap-2"><BarChart3 size={15} className="text-teal" /> Built for life-science teams</span></div></div><div className="relative"><div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-aqua/70 blur-3xl" /><div className="relative overflow-hidden rounded-[32px] border border-line bg-canvas p-5 shadow-soft sm:p-7"><div className="flex items-start justify-between border-b border-line pb-5"><div><p className="eyebrow">Delivery landscape</p><p className="mt-2 text-xl font-bold text-navy">From signal to strategy</p></div><span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-teal shadow-card">Private advisory</span></div><div className="relative mt-6 grid gap-3"><div className="absolute left-[27px] top-4 h-[calc(100%-32px)] border-l border-dashed border-teal/50" />{[{ n: "01", t: "Understand the delivery brief", d: "Route, formulation, device, volume" }, { n: "02", t: "Map the opportunity", d: "Competitive and commercial context" }, { n: "03", t: "Decide the next move", d: "A focused path for your team" }].map((item, i) => <div key={item.n} className="relative flex gap-4 rounded-2xl border border-line bg-white p-4"><span className={`relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-bold ${i === 1 ? "bg-teal text-navy" : "bg-navy text-teal"}`}>{item.n}</span><div><p className="text-sm font-bold text-navy">{item.t}</p><p className="mt-1 text-xs text-muted">{item.d}</p></div></div>)}</div><div className="mt-5 rounded-2xl bg-navy p-5 text-white"><div className="flex items-center justify-between"><span className="text-sm font-semibold">Your delivery questions</span><span className="text-xs text-teal">Start here →</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full w-[68%] rounded-full bg-teal" /></div><p className="mt-3 text-xs text-white/60">A clearer view of what matters next.</p></div></div></div></div></section>
-    <section className="container-shell py-20 lg:py-24"><SectionIntro eyebrow="Where we help" title="A focused lens on the decisions behind delivery." text="The work is deliberately practical: bring the right evidence into the room, make trade-offs visible, and give teams a credible path forward." /><div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">{services.map((service, i) => { const Icon = icons[i]; return <div key={service.title} className="group border-t-2 border-line bg-white p-6 transition hover:border-teal hover:shadow-card"><div className="flex items-center justify-between"><span className="text-xs font-bold text-teal">{service.eyebrow}</span><Icon size={19} className="text-muted transition group-hover:text-teal" /></div><h3 className="mt-12 text-lg font-bold text-navy">{service.title}</h3><p className="mt-3 text-sm leading-6 text-muted">{service.text}</p></div>; })}</div></section>
-    <section className="bg-navy py-20 text-white lg:py-24"><div className="container-shell grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><p className="eyebrow text-teal">Drug intelligence</p><h2 className="mt-4 text-4xl font-bold leading-tight sm:text-5xl">The right detail changes the commercial question.</h2></div><div><p className="max-w-2xl text-lg leading-8 text-white/70">Our private intelligence experience is designed to help teams see delivery technology, formulation choices, device fit, and market context in one considered view.</p><Link href="/drug-insights" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-teal hover:text-white">Explore the intelligence lens <ArrowRight size={16} /></Link></div></div></section>
-    <section className="container-shell py-20 lg:py-24"><div className="rounded-[28px] border border-teal/25 bg-aqua p-8 sm:p-12 lg:flex lg:items-end lg:justify-between"><div><p className="eyebrow">Private database access</p><h2 className="mt-3 max-w-2xl text-3xl font-bold text-navy sm:text-4xl">Request access for your organization.</h2><p className="mt-4 max-w-xl leading-7 text-muted">Access is reviewed and activated manually. A request does not create an active subscription.</p></div><Link href="/register" className="button-primary mt-7 shrink-0 gap-2 lg:mt-0">Start a request <ArrowRight size={16} /></Link></div></section>
-  </>;
+  return (
+    <div className="w-full bg-[#F5F8FA] pb-16 pt-6 sm:pt-8 lg:pt-10 space-y-12 sm:space-y-16 lg:space-y-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 lg:space-y-20">
+        
+        {/* ========================================================
+            1. HERO SECTION
+           ======================================================== */}
+        <section
+          aria-label="Chesapeake Pharma Overview"
+          className="rounded-2xl lg:rounded-3xl overflow-hidden border border-[#CDE5E7] bg-white shadow-[0_12px_40px_rgba(11,45,69,0.06)]"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[380px] xl:min-h-[420px]">
+            {/* Left Content Side */}
+            <div className="lg:col-span-7 p-7 sm:p-10 xl:p-14 flex flex-col justify-between bg-gradient-to-br from-[#EBF6F8] via-[#E2F3F5] to-[#D5EEF2]">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-[#289CA0]/30 text-[#07546A] text-[11px] font-bold uppercase tracking-widest shadow-xs mb-5">
+                  <span className="w-2 h-2 rounded-full bg-[#289CA0] animate-pulse" />
+                  Drug Delivery Advisory
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl xl:text-[38px] font-extrabold uppercase leading-[1.18] tracking-tight text-[#0B2D45]">
+                  CHESAPEAKE PHARMA:
+                  <br />
+                  <span className="text-[#135C70]">DELIVERING STRATEGIC DRUG</span>
+                  <br />
+                  INSIGHTS & DELIVERY
+                  <br />
+                  TECHNOLOGY
+                  <br />
+                  COMMERCIALIZATION
+                </h1>
+
+                <p className="mt-5 text-sm sm:text-base leading-relaxed text-[#3D5668] max-w-xl font-normal">
+                  Expert guidance on combination products, novel injectables, and IV-to-subcutaneous
+                  transitions to derisk pharmaceutical pipeline investments.
+                </p>
+              </div>
+
+              <div className="pt-8 sm:pt-10 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/contact"
+                  className="focus-ring inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-6 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] group"
+                >
+                  <span>SCHEDULE A CONSULTATION</span>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+
+                <Link
+                  href="/services"
+                  className="focus-ring inline-flex items-center justify-center rounded-lg bg-white/80 hover:bg-white border border-[#B8DCDE] px-5 py-3.5 text-xs sm:text-sm font-semibold text-[#0B2D45] transition-all hover:border-[#135C70]"
+                >
+                  Explore Key Services
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Photo Side */}
+            <div className="lg:col-span-5 relative min-h-[300px] lg:min-h-full bg-[#E2F0F2] overflow-hidden">
+              <Image
+                src="/assets/hero-lab-reference.png"
+                alt="Dr. Philip Green in biotechnology consulting laboratory"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                className="object-cover object-center transition-transform duration-700 hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/30 via-transparent to-transparent lg:hidden" />
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            2. ABOUT OUR LEADERSHIP SECTION (Directly under Hero)
+           ======================================================== */}
+        <section
+          aria-label="About Our Leadership"
+          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
+        >
+          {/* Section Header */}
+          <div className="flex items-center gap-3 mb-8 pb-4 border-b border-[#E6EFF1]">
+            <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
+              ABOUT OUR LEADERSHIP
+            </h2>
+            <TealWedge className="w-10 h-3" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-10 items-start">
+            {/* Leadership Portrait */}
+            <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center sm:items-start">
+              <div className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-[#D4E8EB] bg-[#E8F6F8] w-full max-w-[240px] shadow-sm">
+                <Image
+                  src="/assets/dr-philip-green.png"
+                  alt="Philip Green, Ph.D. — President, Chesapeake Pharma"
+                  fill
+                  sizes="(max-width: 768px) 240px, 20vw"
+                  className="object-cover object-top"
+                />
+              </div>
+              <div className="mt-3.5 flex items-center gap-2 text-xs font-semibold text-[#07546A]">
+                <CheckCircle2 size={15} className="text-[#289CA0]" />
+                <span>Verified Biopharma Executive</span>
+              </div>
+            </div>
+
+            {/* Leadership Biography Content */}
+            <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-between h-full space-y-4">
+              <div>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0B2D45] tracking-tight">
+                    Philip Green, Ph.D.
+                  </h3>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#289CA0] bg-[#EAF7F8] px-3 py-1 rounded-full border border-[#BCE1E4]">
+                    President
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-[#163449]/70 mt-1 mb-4">
+                  President & Founder, Chesapeake Pharma LLC · Weehawken, NJ, USA
+                </p>
+
+                <div className="space-y-3.5 text-sm sm:text-[15px] leading-relaxed text-[#3D5668]">
+                  <p>
+                    Dr. Green has a distinguished career specializing in the commercialization
+                    of drug delivery technologies, spanning commercial strategy and market
+                    positioning of combination products, novel injectables, and
+                    IV-to-subcutaneous transitions. Currently, he consults with leading
+                    pharmaceutical and biotech companies on commercial strategy, business
+                    development, and pipeline optimization.
+                  </p>
+                  <p>
+                    Previously, Dr. Green served as Executive Director of Biologics Device Strategy
+                    at Merck US (where he led Keytruda SubQ formulation marketing), and spent 16 years
+                    at Becton-Dickinson directing advanced delivery initiatives (transdermal,
+                    microneedle, and high-volume subcutaneous pumps). He holds a PhD in Pharmaceutical
+                    Chemistry from Cardiff University and completed post-doctoral training at the
+                    University of California, San Francisco (UCSF).
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/leadership"
+                  className="focus-ring inline-flex items-center gap-2 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition-all active:scale-[0.98] group"
+                >
+                  <FileText size={15} />
+                  <span>View Full CV</span>
+                  <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+
+                <Link
+                  href="/contact"
+                  className="focus-ring inline-flex items-center gap-2 rounded-lg border border-line bg-white hover:bg-aqua px-4 py-2.5 text-xs sm:text-sm font-semibold text-navy transition"
+                >
+                  Schedule Executive Consultation
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            3. KEY SERVICES SECTION (Directly under Leadership)
+           ======================================================== */}
+        <section
+          aria-label="Key Services"
+          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-[#EEF8FA] p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
+        >
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#D8ECF0]">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
+                KEY SERVICES
+              </h2>
+              <TealWedge className="w-10 h-3" />
+            </div>
+            <p className="text-xs sm:text-sm text-[#476375] font-medium">
+              Four specialized pillars of drug delivery commercial advisory
+            </p>
+          </div>
+
+          {/* 4 Polished Services Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {/* Service 1 */}
+            <div className="rounded-xl bg-white border border-[#D0E6E8] p-6 flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#E8F6F8] flex items-center justify-center border border-[#CFE8EA] group-hover:scale-105 transition-transform">
+                  <CommercialStrategyIcon className="w-7 h-7" />
+                </div>
+                <h3 className="mt-5 text-sm sm:text-base font-bold uppercase tracking-tight text-[#0B2D45] leading-snug">
+                  Commercial
+                  <br />
+                  Strategy
+                </h3>
+                <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                  Frame delivery choices around market needs, physician adoption, competitive differentiation, and practical payer positioning.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-line/60">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
+                >
+                  <span>Learn more</span>
+                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Service 2 */}
+            <div className="rounded-xl bg-white border border-[#D0E6E8] p-6 flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#E8F6F8] flex items-center justify-center border border-[#CFE8EA] group-hover:scale-105 transition-transform">
+                  <DrugDeliveryIcon className="w-7 h-7" />
+                </div>
+                <h3 className="mt-5 text-sm sm:text-base font-bold uppercase tracking-tight text-[#0B2D45] leading-snug">
+                  Drug Delivery
+                  <br />
+                  Assessment
+                </h3>
+                <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                  Evaluate route, device, autoinjector, and large-volume formulation compatibility to select optimal combination systems.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-line/60">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
+                >
+                  <span>Learn more</span>
+                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Service 3 */}
+            <div className="rounded-xl bg-white border border-[#D0E6E8] p-6 flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#E8F6F8] flex items-center justify-center border border-[#CFE8EA] group-hover:scale-105 transition-transform">
+                  <BusinessDevIcon className="w-7 h-7" />
+                </div>
+                <h3 className="mt-5 text-sm sm:text-base font-bold uppercase tracking-tight text-[#0B2D45] leading-snug">
+                  Business
+                  <br />
+                  Development
+                </h3>
+                <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                  Translate technical delivery signals into strategic partnership structures, licensing agreements, and co-development terms.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-line/60">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
+                >
+                  <span>Learn more</span>
+                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Service 4 */}
+            <div className="rounded-xl bg-white border border-[#D0E6E8] p-6 flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#E8F6F8] flex items-center justify-center border border-[#CFE8EA] group-hover:scale-105 transition-transform">
+                  <CompetitiveIntelIcon className="w-7 h-7" />
+                </div>
+                <h3 className="mt-5 text-sm sm:text-base font-bold uppercase tracking-tight text-[#0B2D45] leading-snug">
+                  Competitive
+                  <br />
+                  Intelligence
+                </h3>
+                <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                  Continuously monitor competing drug delivery technologies, patent landscapes, formulation patents, and competitor pipeline milestones.
+                </p>
+              </div>
+              <div className="mt-6 pt-3 border-t border-line/60">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
+                >
+                  <span>Learn more</span>
+                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            4. TESTIMONIALS & TRUSTED BY (Directly under Services)
+           ======================================================== */}
+        <section
+          aria-label="Testimonials and Trusted By"
+          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
+        >
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6EFF1]">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
+                TESTIMONIALS & TRUSTED BY
+              </h2>
+              <TealWedge className="w-10 h-3" />
+            </div>
+            <span className="text-xs text-[#516C7D] font-medium">
+              Industry peer recognition & pharmaceutical partnership references
+            </span>
+          </div>
+
+          {/* 4 Client Testimonial Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+            {/* Card 1 */}
+            <div className="rounded-xl border border-[#D5E7EA] bg-[#F7FCFD] p-5 flex flex-col justify-between hover:bg-white hover:border-[#289CA0] transition shadow-xs">
+              <div>
+                <div className="flex items-center justify-between border-b border-line/60 pb-3">
+                  <MerckLogoBadge />
+                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                </div>
+                <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
+                  &ldquo;Dr. Green pharmaceutical clients to penetration pharma pharmaceutical company key clients.&rdquo;
+                </p>
+              </div>
+              <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
+                Biologics Device Advisory
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="rounded-xl border border-[#D5E7EA] bg-[#F7FCFD] p-5 flex flex-col justify-between hover:bg-white hover:border-[#289CA0] transition shadow-xs">
+              <div>
+                <div className="flex items-center justify-between border-b border-line/60 pb-3">
+                  <NovartisLogoBadge />
+                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                </div>
+                <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
+                  &ldquo;Dr. Green has a highest pharmaceutical sporadically inovartis.&rdquo;
+                </p>
+              </div>
+              <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
+                Combination Strategy Review
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="rounded-xl border border-[#D5E7EA] bg-[#F7FCFD] p-5 flex flex-col justify-between hover:bg-white hover:border-[#289CA0] transition shadow-xs">
+              <div>
+                <div className="flex items-center justify-between border-b border-line/60 pb-3">
+                  <NovartisLogoBadge />
+                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                </div>
+                <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
+                  &ldquo;Dr. Green has distinguished pharmaceutical surg strategy and usen imvental nnovartis.&rdquo;
+                </p>
+              </div>
+              <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
+                Subcutaneous Transition
+              </p>
+            </div>
+
+            {/* Card 4 */}
+            <div className="rounded-xl border border-[#D5E7EA] bg-[#F7FCFD] p-5 flex flex-col justify-between hover:bg-white hover:border-[#289CA0] transition shadow-xs">
+              <div>
+                <div className="flex items-center justify-between border-b border-line/60 pb-3">
+                  <MerckLogoBadge />
+                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                </div>
+                <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
+                  &ldquo;Dr. Green has euntelization pharmaceutical analytics and consultantfy pharmaceutial dest.&rdquo;
+                </p>
+              </div>
+              <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
+                Formulation Analytics Lead
+              </p>
+            </div>
+          </div>
+
+          {/* Compliance & Verification Footnote */}
+          <div className="mt-6 pt-4 border-t border-line/50 text-center">
+            <p className="text-xs text-[#6F8A99]">
+              * Content & client logos reflect the layout reference design. Formal endorsement approvals and verified client testimonials pending client confirmation.
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  );
 }
