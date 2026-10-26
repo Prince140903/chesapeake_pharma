@@ -301,7 +301,140 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================
-            4. TESTIMONIALS & TRUSTED BY (Directly under Services)
+            4. FOCUSED AREAS (Directly under Key Services)
+           ======================================================== */}
+        <section
+          aria-label="Focused Areas"
+          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
+        >
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6EFF1]">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
+                FOCUSED AREAS
+              </h2>
+              <TealWedge className="w-10 h-3" />
+            </div>
+            <p className="text-xs sm:text-sm text-[#476375] font-medium">
+              Target therapeutic modalities driving high-volume delivery and formulation transitions
+            </p>
+          </div>
+
+          {/* 3 Modality Focus Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Monoclonal Antibodies */}
+            <div className="rounded-xl bg-[#F7FCFD] border border-[#D5E7EA] overflow-hidden flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
+                  <Image
+                    src="/assets/monoclonal antibodies 1.png"
+                    alt="Monoclonal Antibodies molecular binding illustration"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/40 via-transparent to-transparent" />
+                  <span className="absolute top-3 left-3 rounded-md bg-[#0B2D45]/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                    Biologics Modality
+                  </span>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0B2D45] tracking-tight group-hover:text-[#135C70] transition-colors">
+                    Monoclonal Antibodies (mAbs)
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                    Strategic commercialization and device selection for standard and high-concentration mAbs transitioning from hospital IV infusions to rapid, patient-administered subcutaneous formulations.
+                  </p>
+                </div>
+              </div>
+              <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#135C70]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#289CA0]" />
+                  SC formulation & autoinjector integration
+                </span>
+              </div>
+            </div>
+
+            {/* Card 2: Bispecific Antibodies */}
+            <div className="rounded-xl bg-[#F7FCFD] border border-[#D5E7EA] overflow-hidden flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
+                  <Image
+                    src="/assets/bispecific antibodies 1.png"
+                    alt="Bispecific Antibodies dual-targeting mechanism illustration"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/40 via-transparent to-transparent" />
+                  <span className="absolute top-3 left-3 rounded-md bg-[#0B2D45]/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                    Dual-Targeting
+                  </span>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0B2D45] tracking-tight group-hover:text-[#135C70] transition-colors">
+                    Bispecific Antibodies
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                    Navigating complex dose optimization, target affinity balance, immunogenicity risks, and wearable infuser requirements for next-generation multi-specific antibody formats.
+                  </p>
+                </div>
+              </div>
+              <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#135C70]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#289CA0]" />
+                  T-cell engagers & on-body delivery
+                </span>
+              </div>
+            </div>
+
+            {/* Card 3: Nucleic Acids */}
+            <div className="rounded-xl bg-[#F7FCFD] border border-[#D5E7EA] overflow-hidden flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group">
+              <div>
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
+                  <Image
+                    src="/assets/nucleic acids 1.png"
+                    alt="Nucleic Acids DNA and RNA strand delivery illustration"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/40 via-transparent to-transparent" />
+                  <span className="absolute top-3 left-3 rounded-md bg-[#0B2D45]/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                    Genetic Medicines
+                  </span>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0B2D45] tracking-tight group-hover:text-[#135C70] transition-colors">
+                    Nucleic Acids & Oligonucleotides
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                    Formulation stabilization, lipid nanoparticle (LNP) delivery pathways, cold-chain considerations, and target delivery routing across mRNA, siRNA, and gene therapies.
+                  </p>
+                </div>
+              </div>
+              <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#135C70]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#289CA0]" />
+                  mRNA, siRNA & LNP delivery pathways
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Disclaimer Footnote */}
+          <div className="mt-8 pt-4 border-t border-[#E6EFF1] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#718898]">
+            <p className="italic">
+              * Note: The molecular and cellular images above were generated using AI for representational purposes only.
+            </p>
+            <span className="font-semibold text-[#135C70]">
+              Chesapeake Pharma Technical Focus
+            </span>
+          </div>
+        </section>
+
+        {/* ========================================================
+            5. TESTIMONIALS & TRUSTED BY (Directly under Focused Areas)
            ======================================================== */}
         <section
           aria-label="Testimonials and Trusted By"

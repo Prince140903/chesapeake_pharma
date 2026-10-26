@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAdmin } from "./admin-context";
 import { AdminLoginCard } from "./admin-login-card";
+import { signOutAdminAction } from "@/app/admin/actions";
 
 interface AdminLayoutShellProps {
   children: React.ReactNode;
