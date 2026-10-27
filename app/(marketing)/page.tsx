@@ -15,7 +15,7 @@ export default function HomePage() {
   return (
     <div className="w-full bg-[#F5F8FA] pb-16 pt-6 sm:pt-8 lg:pt-10 space-y-12 sm:space-y-16 lg:space-y-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 lg:space-y-20">
-        
+
         {/* ========================================================
             1. HERO SECTION
            ======================================================== */}
@@ -71,7 +71,7 @@ export default function HomePage() {
             {/* Right Photo Side */}
             <div className="lg:col-span-5 relative min-h-[300px] lg:min-h-full bg-[#E2F0F2] overflow-hidden">
               <Image
-                src="/assets/hero-lab-reference.png"
+                src="/assets/MDS-white.png"
                 alt="Dr. Philip Green in biotechnology consulting laboratory"
                 fill
                 priority

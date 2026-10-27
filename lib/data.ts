@@ -77,10 +77,7 @@ export const services = [
 export const navItems = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
-  { label: "Leadership", href: "/leadership" },
-  { label: "Services", href: "/services" },
-  { label: "Drug Insights", href: "/drug-insights" },
-  { label: "Clients", href: "/clients" },
+  { label: "Publications", href: "/publications" },
   { label: "Contact", href: "/contact" }
 ];
 

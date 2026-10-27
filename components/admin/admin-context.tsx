@@ -57,7 +57,7 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true); // default to authenticated for review convenience
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // default to unauthenticated; require login
   const [adminUser, setAdminUser] = useState<AdminUser | null>(INITIAL_MOCK_USERS[5]); // Dr. Philip Green
   const [drugs, setDrugs] = useState<AdminDrug[]>(INITIAL_MOCK_DRUGS);
   const [users, setUsers] = useState<AdminUser[]>(INITIAL_MOCK_USERS);

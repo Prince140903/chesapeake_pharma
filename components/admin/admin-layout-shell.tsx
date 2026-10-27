@@ -160,7 +160,7 @@ export function AdminLayoutShell({ children }: AdminLayoutShellProps) {
 
             {/* Logout Action */}
             <button
-              onClick={() => logout()}
+              onClick={async () => { await signOutAdminAction(); logout(); } }
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 hover:text-rose-200 transition"
             >
               <LogOut size={16} />
@@ -218,8 +218,9 @@ export function AdminLayoutShell({ children }: AdminLayoutShellProps) {
           })}
           <div className="pt-2 border-t border-[#133A58]">
             <button
-              onClick={() => {
+              onClick={async () => {
                 setMobileMenuOpen(false);
+                await signOutAdminAction();
                 logout();
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40"

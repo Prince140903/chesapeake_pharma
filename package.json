@@ -2,7 +2,7 @@
   "name": "chesapeake-pharma",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@11.0.0",
+  "packageManager": "npm@11.12.1",
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
