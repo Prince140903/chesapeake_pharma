@@ -59,13 +59,6 @@ export default function AdminDashboardPage() {
             Operational command center for drug datasets, customer access, and annual subscriptions.
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-[#0B2D45] border border-slate-200">
-            <span className="h-2 w-2 rounded-full bg-teal" />
-            System Healthy · Mock Mode
-          </span>
-        </div>
       </div>
 
       {/* Primary KPI Grid */}
@@ -292,11 +285,10 @@ export default function AdminDashboardPage() {
                       {job.file_name}
                     </span>
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        job.status === "completed"
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${job.status === "completed"
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {job.status.toUpperCase()}
                     </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   FileSpreadsheet,
   UploadCloud,
@@ -16,53 +16,267 @@ import {
   ArrowRight,
   X,
   FileText,
-  RotateCcw
+  RotateCcw,
+  Loader,
+  AlertCircle
 } from "lucide-react";
 import { useAdmin } from "@/components/admin/admin-context";
-import { AdminImportJob } from "@/lib/admin-mock-data";
+import {
+  parseUploadedFileAction,
+  suggestMappingsAction,
+  validateMappingsAndPreviewAction,
+  executeImportAction,
+  getImportHistoryAction,
+  uploadFileChunkAction
+} from "@/app/admin/import-actions";
+import { DatasetType } from "@/lib/import/schema";
 
 export default function AdminImportsPage() {
-  const { imports, addImportJob } = useAdmin();
+  const { addToast } = useAdmin();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [selectedJob, setSelectedJob] = useState<AdminImportJob | null>(null);
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  // Import history
+  const [importHistory, setImportHistory] = useState<any[]>([]);
+  const [selectedJob, setSelectedJob] = useState<any | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   // Wizard state
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [selectedDataset, setSelectedDataset] = useState<"DB1" | "DB2">("DB1");
-  const [fileName, setFileName] = useState("2026_Q4_Delivery_Candidates_Draft.xlsx");
+  const [selectedDataset, setSelectedDataset] = useState<DatasetType>("DB1");
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; sessionId: string } | null>(null);
+  const [fileHeaders, setFileHeaders] = useState<string[]>([]);
+  const [fileTotalRows, setFileTotalRows] = useState(0);
+
+  // Mapping state
+  const [supportedColumns, setSupportedColumns] = useState<Record<string, any>>({});
+  const [mappings, setMappings] = useState<Record<string, string | null>>({});
+
+  // Preview state
+  const [previewData, setPreviewData] = useState<{
+    validRows: Record<string, any>[];
+    invalidRows: any[];
+    totalValid: number;
+    totalInvalid: number;
+    duplicatesWithinBatch: number;
+    summary: string;
+    summaryStatus: "success" | "warning" | "error";
+  } | null>(null);
+
+  // Confirmation state
   const [matchingStrategy, setMatchingStrategy] = useState<"drug_name_company" | "compound_id">("drug_name_company");
-  const [importMode, setImportMode] = useState<"upsert" | "insert_only">("upsert");
+
+  // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
+  const [importResult, setImportResult] = useState<any | null>(null);
+
+  // Load import history on mount
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    setLoadingHistory(true);
+    const result = await getImportHistoryAction();
+    if (result.success && result.data) {
+      setImportHistory(result.data);
+    }
+    setLoadingHistory(false);
+  };
 
   const startNewImport = () => {
+    // Reset all wizard state
     setStep(1);
     setSelectedDataset("DB1");
-    setFileName("2026_Q4_Delivery_Candidates_Draft.xlsx");
+    setUploadedFile(null);
+    setFileHeaders([]);
+    setFileTotalRows(0);
+    setSupportedColumns({});
+    setMappings({});
+    setPreviewData(null);
+    setMatchingStrategy("drug_name_company");
+    setIsProcessing(false);
+    setImportResult(null);
     setIsWizardOpen(true);
   };
 
-  const handleExecuteImport = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsWizardOpen(false);
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      addImportJob({
-        dataset_type: selectedDataset,
-        file_name: fileName,
-        file_size_kb: 340,
-        uploaded_by: "Philip Green (Admin)",
-        status: "completed",
-        total_rows: 24,
-        inserted_count: 21,
-        updated_count: 3,
-        skipped_count: 0,
-        failed_count: 0,
-        matching_strategy: matchingStrategy,
-        errors: []
+    setIsProcessing(true);
+    try {
+      // Generate session ID for this upload
+      const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+      // Upload file in 256KB chunks
+      const CHUNK_SIZE = 256 * 1024; // 256KB chunks
+      let offset = 0;
+
+      while (offset < file.size) {
+        const chunk = file.slice(offset, offset + CHUNK_SIZE);
+        const arrayBuffer = await chunk.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const isLastChunk = offset + CHUNK_SIZE >= file.size;
+
+        const chunkResult = await uploadFileChunkAction(
+          uint8Array,
+          sessionId,
+          isLastChunk
+        );
+
+        if (!chunkResult.success) {
+          addToast({
+            type: "error",
+            title: "Upload Error",
+            message: chunkResult.error || "Failed to upload chunk"
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        offset += CHUNK_SIZE;
+
+        // Show upload progress
+        const progress = Math.min(100, Math.round((offset / file.size) * 100));
+        console.log(`Upload progress: ${progress}%`);
+      }
+
+      // Parse the complete file from chunks
+      const parseResult = await parseUploadedFileAction(sessionId, file.name);
+
+      if (!parseResult.success) {
+        addToast({
+          type: "error",
+          title: "File Parse Error",
+          message: parseResult.error || "Failed to parse file"
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      setUploadedFile({ name: file.name, sessionId });
+      setFileHeaders(parseResult.data!.headers);
+      setFileTotalRows(parseResult.data!.totalRows);
+
+      // Suggest mappings
+      const suggestResult = await suggestMappingsAction(
+        parseResult.data!.headers,
+        selectedDataset
+      );
+
+      if (suggestResult.success) {
+        setSupportedColumns(suggestResult.data!.supportedColumns);
+        setMappings(suggestResult.data!.suggestions);
+        setStep(2);
+      }
+
+      addToast({
+        type: "success",
+        title: "File Uploaded",
+        message: `${file.name}: ${parseResult.data!.totalRows} rows detected`
       });
-    }, 900);
+    } catch (err) {
+      addToast({
+        type: "error",
+        title: "Upload Error",
+        message: String(err)
+      });
+    } finally {
+      setIsProcessing(false);
+      // Reset file input
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const proceedToPreview = async () => {
+    if (!uploadedFile) return;
+
+    setIsProcessing(true);
+    try {
+      const result = await validateMappingsAndPreviewAction(
+        uploadedFile.sessionId,
+        mappings,
+        selectedDataset
+      );
+
+      if (result.success && result.data) {
+        setPreviewData(result.data);
+        setStep(3);
+      } else {
+        addToast({
+          type: "error",
+          title: "Validation Error",
+          message: result.error || "Validation failed"
+        });
+      }
+    } catch (err) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: String(err)
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleExecuteImport = async () => {
+    if (!uploadedFile) return;
+
+    setIsProcessing(true);
+    try {
+      const result = await executeImportAction(
+        uploadedFile.sessionId,
+        uploadedFile.name,
+        mappings,
+        selectedDataset,
+        matchingStrategy
+      );
+
+      if (result.success) {
+        setImportResult(result.data);
+        setStep(4);
+        addToast({
+          type: "success",
+          title: "Import Completed",
+          message: result.message || "Import successful"
+        });
+        // Reload history
+        await loadHistory();
+      } else {
+        addToast({
+          type: "error",
+          title: "Import Failed",
+          message: result.error || "Import failed"
+        });
+      }
+    } catch (err) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: String(err)
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const closeWizard = () => {
+    setIsWizardOpen(false);
+    // Reset state
+    setStep(1);
+    setUploadedFile(null);
+    setFileHeaders([]);
+    setMappings({});
+    setPreviewData(null);
+  };
+
+  const updateMapping = (uploadedHeader: string, dbColumn: string | null) => {
+    setMappings((prev) => ({
+      ...prev,
+      [uploadedHeader]: dbColumn
+    }));
   };
 
   return (
@@ -114,86 +328,108 @@ export default function AdminImportsPage() {
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Status</th>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Total Rows</th>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Result Breakdown</th>
-                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Uploaded At / Admin</th>
+                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Uploaded At</th>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px] text-right">Inspect</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#DCE6EB]">
-              {imports.map((job) => (
-                <tr key={job.id} className="hover:bg-[#F5F8FA]/80 transition">
-                  <td className="px-4 py-3 font-bold text-[#0B2D45]">
-                    <div className="flex items-center gap-2">
-                      <FileSpreadsheet size={15} className="text-[#135C70]" />
-                      <span className="font-semibold">{job.file_name}</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-normal">
-                      {job.file_size_kb} KB · Strategy: {job.matching_strategy}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold ${
-                        job.dataset_type === "DB1"
-                          ? "bg-teal-50 text-[#135C70] border border-teal-200"
-                          : "bg-blue-50 text-blue-900 border border-blue-200"
-                      }`}
-                    >
-                      {job.dataset_type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {job.status === "completed" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
-                        <CheckCircle2 size={12} className="text-emerald-600" />
-                        Completed
-                      </span>
-                    )}
-                    {job.status === "failed" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 border border-rose-200">
-                        <XCircle size={12} className="text-rose-600" />
-                        Failed / Rolled Back
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-[#0B2D45]">
-                    {job.total_rows}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5 text-[10px]">
-                      <span className="rounded bg-emerald-100 px-1.5 py-0.2 text-emerald-800 font-bold">
-                        +{job.inserted_count} new
-                      </span>
-                      <span className="rounded bg-blue-100 px-1.5 py-0.2 text-blue-800 font-semibold">
-                        {job.updated_count} updated
-                      </span>
-                      {job.failed_count > 0 && (
-                        <span className="rounded bg-red-100 px-1.5 py-0.2 text-red-800 font-bold">
-                          {job.failed_count} errors
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500 text-[11px]">
-                    <div>{new Date(job.created_at).toLocaleDateString()}</div>
-                    <span className="text-[10px] text-slate-400">{job.uploaded_by}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => setSelectedJob(job)}
-                      className="rounded p-1 text-slate-500 hover:bg-[#EAF7F7] hover:text-[#135C70]"
-                      title="Inspect Job Log"
-                    >
-                      <Eye size={15} />
-                    </button>
+              {loadingHistory ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                    <Loader size={20} className="inline animate-spin" />
+                    <p className="mt-2">Loading import history...</p>
                   </td>
                 </tr>
-              ))}
+              ) : importHistory.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                    <FileText size={20} className="inline" />
+                    <p className="mt-2">No imports yet. Create your first import to begin.</p>
+                  </td>
+                </tr>
+              ) : (
+                importHistory.map((job) => (
+                  <tr key={job.id} className="hover:bg-[#F5F8FA]/80 transition">
+                    <td className="px-4 py-3 font-bold text-[#0B2D45]">
+                      <div className="flex items-center gap-2">
+                        <FileSpreadsheet size={15} className="text-[#135C70]" />
+                        <span className="font-semibold">{job.file_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold ${
+                          job.dataset_type === "DB1"
+                            ? "bg-teal-50 text-[#135C70] border border-teal-200"
+                            : "bg-blue-50 text-blue-900 border border-blue-200"
+                        }`}
+                      >
+                        {job.dataset_type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {job.status === "completed" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
+                          <CheckCircle2 size={12} className="text-emerald-600" />
+                          Completed
+                        </span>
+                      )}
+                      {job.status === "failed" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 border border-rose-200">
+                          <XCircle size={12} className="text-rose-600" />
+                          Failed
+                        </span>
+                      )}
+                      {job.status === "processing" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-[10px] font-bold text-yellow-800 border border-yellow-200">
+                          <Clock size={12} className="text-yellow-600" />
+                          Processing
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-[#0B2D45]">
+                      {job.total_rows}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 text-[10px]">
+                        {job.inserted_count > 0 && (
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 font-bold">
+                            +{job.inserted_count} new
+                          </span>
+                        )}
+                        {job.updated_count > 0 && (
+                          <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-800 font-semibold">
+                            {job.updated_count} updated
+                          </span>
+                        )}
+                        {job.failed_count > 0 && (
+                          <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 font-bold">
+                            {job.failed_count} errors
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-slate-500 text-[11px]">
+                      {new Date(job.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => setSelectedJob(job)}
+                        className="rounded p-1 text-slate-500 hover:bg-[#EAF7F7] hover:text-[#135C70]"
+                        title="Inspect Job"
+                      >
+                        <Eye size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Import Details Inspection Modal */}
+      {/* Import Details Modal */}
       {selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-xl rounded-2xl border border-[#DCE6EB] bg-white p-6 shadow-2xl">
@@ -203,13 +439,10 @@ export default function AdminImportsPage() {
                   JOB REPORT #{selectedJob.id}
                 </span>
                 <h2 className="mt-1 text-lg font-bold text-[#0B2D45]">{selectedJob.file_name}</h2>
-                <p className="text-xs text-slate-500">
-                  Target Dataset: {selectedJob.dataset_type} · Uploaded by {selectedJob.uploaded_by}
-                </p>
               </div>
               <button
                 onClick={() => setSelectedJob(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
               >
                 <X size={18} />
               </button>
@@ -234,27 +467,6 @@ export default function AdminImportsPage() {
                   <p className="text-base font-bold text-rose-900">{selectedJob.failed_count}</p>
                 </div>
               </div>
-
-              <div>
-                <p className="font-bold text-[#0B2D45]">Execution Diagnostics & Log Entries</p>
-                <div className="mt-2 max-h-48 overflow-y-auto rounded-lg bg-slate-900 p-3 font-mono text-[11px] text-slate-200">
-                  <p className="text-slate-400">[{selectedJob.created_at}] Ingestion started for {selectedJob.file_name}</p>
-                  <p className="text-teal-400">[{selectedJob.created_at}] Schema validation passed: {selectedJob.dataset_type}</p>
-                  <p className="text-slate-400">[{selectedJob.created_at}] Match key resolved to: {selectedJob.matching_strategy}</p>
-
-                  {selectedJob.errors && selectedJob.errors.length > 0 ? (
-                    selectedJob.errors.map((err, i) => (
-                      <p key={i} className="text-rose-400 mt-1">
-                        [!ERROR] {err}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="text-emerald-400 mt-1">
-                      [SUCCESS] All rows committed successfully. Updated_at triggers refreshed.
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
 
             <div className="mt-6 flex justify-end border-t border-[#DCE6EB] pt-4">
@@ -262,32 +474,42 @@ export default function AdminImportsPage() {
                 onClick={() => setSelectedJob(null)}
                 className="rounded-lg bg-[#0B2D45] px-4 py-2 text-xs font-bold text-white hover:bg-[#135C70]"
               >
-                Close Report
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,.xlsx,.xls"
+        onChange={handleFileUpload}
+        style={{ display: "none" }}
+      />
+
       {/* Multi-step Import Wizard Modal */}
       {isWizardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl border border-[#DCE6EB] bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-3xl rounded-2xl border border-[#DCE6EB] bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between pb-4 border-b border-[#DCE6EB]">
               <div>
                 <span className="rounded bg-[#EAF7F7] px-2 py-0.5 text-[10px] font-bold text-[#135C70]">
                   IMPORT WIZARD · STEP {step} OF 4
                 </span>
                 <h2 className="mt-1 text-xl font-bold text-[#0B2D45]">
-                  {step === 1 && "1. Select Dataset & File"}
+                  {step === 1 && "1. Select Dataset & Upload File"}
                   {step === 2 && "2. Column Mapping Verification"}
-                  {step === 3 && "3. Row Preview & Validation Checks"}
-                  {step === 4 && "4. Ingestion Confirmation"}
+                  {step === 3 && "3. Row Preview & Validation"}
+                  {step === 4 && "4. Import Confirmation"}
                 </h2>
               </div>
               <button
-                onClick={() => setIsWizardOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                onClick={closeWizard}
+                disabled={isProcessing}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
               >
                 <X size={18} />
               </button>
@@ -297,8 +519,8 @@ export default function AdminImportsPage() {
             {step === 1 && (
               <div className="mt-5 space-y-4 text-xs">
                 <div>
-                  <label className="block font-bold text-[#0B2D45]">Target Database Pack</label>
-                  <div className="mt-2 grid grid-cols-2 gap-3">
+                  <label className="block font-bold text-[#0B2D45] mb-2">Target Database Pack</label>
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setSelectedDataset("DB1")}
@@ -309,8 +531,8 @@ export default function AdminImportsPage() {
                       }`}
                     >
                       <Pill size={18} className="text-[#135C70]" />
-                      <p className="mt-2 font-bold text-[#0B2D45]">DB1: Subcutaneous Database</p>
-                      <p className="text-[11px] text-slate-500">Requires high-volume formulation & volume columns.</p>
+                      <p className="mt-2 font-bold text-[#0B2D45]">DB1: Subcutaneous</p>
+                      <p className="text-[11px] text-slate-500">High-volume formulations</p>
                     </button>
 
                     <button
@@ -323,31 +545,35 @@ export default function AdminImportsPage() {
                       }`}
                     >
                       <Database size={18} className="text-[#135C70]" />
-                      <p className="mt-2 font-bold text-[#0B2D45]">DB2: Injectables Database</p>
-                      <p className="text-[11px] text-slate-500">Requires broad injectable delivery fields.</p>
+                      <p className="mt-2 font-bold text-[#0B2D45]">DB2: Broad Injectables</p>
+                      <p className="text-[11px] text-slate-500">All injectable modalities</p>
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#0B2D45]">Upload Spreadsheet (CSV or XLSX)</label>
-                  <div className="mt-2 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#DCE6EB] p-8 text-center bg-[#F5F8FA]">
+                  <label className="block font-bold text-[#0B2D45] mb-2">Upload CSV or XLSX File</label>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#DCE6EB] p-8 text-center bg-[#F5F8FA] cursor-pointer hover:border-[#135C70] transition"
+                  >
                     <UploadCloud size={32} className="text-[#135C70]" />
                     <p className="mt-2 font-semibold text-[#0B2D45]">
-                      {fileName}
+                      Click to select file or drag and drop
                     </p>
                     <p className="text-[11px] text-slate-400">
-                      File type: XLSX (340 KB) · Validated structure
+                      Supports CSV and XLSX files
                     </p>
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-[#DCE6EB]">
                   <button
-                    onClick={() => setStep(2)}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#135C70] px-4 py-2 font-bold text-white hover:bg-[#0B3B48]"
+                    onClick={startNewImport}
+                    disabled={isProcessing}
+                    className="flex items-center gap-1.5 rounded-lg bg-[#135C70] px-4 py-2 font-bold text-white hover:bg-[#0B3B48] disabled:opacity-50"
                   >
-                    <span>Proceed to Column Mapping</span>
+                    <span>Select File</span>
                     <ChevronRight size={15} />
                   </button>
                 </div>
@@ -358,121 +584,152 @@ export default function AdminImportsPage() {
             {step === 2 && (
               <div className="mt-5 space-y-4 text-xs">
                 <p className="text-slate-600">
-                  Verify how spreadsheet headers map to the database schema for <strong>{selectedDataset}</strong>.
+                  Map spreadsheet columns to database fields for <strong>{selectedDataset}</strong>.
+                  {fileTotalRows > 0 && ` (${fileHeaders.length} columns detected in ${fileTotalRows} rows)`}
                 </p>
 
-                <div className="rounded-lg border border-[#DCE6EB] overflow-hidden">
-                  <table className="w-full text-left">
-                    <thead className="bg-[#F5F8FA] text-slate-600 font-semibold text-[10px] uppercase">
-                      <tr>
-                        <th className="p-2.5">Spreadsheet Header</th>
-                        <th className="p-2.5">Schema Column</th>
-                        <th className="p-2.5">Match Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#DCE6EB]">
-                      <tr>
-                        <td className="p-2.5 font-mono text-slate-700">&quot;Drug / Product&quot;</td>
-                        <td className="p-2.5 font-bold text-[#0B2D45]">drug_name</td>
-                        <td className="p-2.5 text-emerald-700 font-semibold">✓ Exact match</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2.5 font-mono text-slate-700">&quot;Sponsor / Company&quot;</td>
-                        <td className="p-2.5 font-bold text-[#0B2D45]">company</td>
-                        <td className="p-2.5 text-emerald-700 font-semibold">✓ Exact match</td>
-                      </tr>
-                      <tr>
-                        <td className="p-2.5 font-mono text-slate-700">&quot;Delivery Technology&quot;</td>
-                        <td className="p-2.5 font-bold text-[#0B2D45]">device_formulation</td>
-                        <td className="p-2.5 text-emerald-700 font-semibold">✓ Mapped</td>
-                      </tr>
-                      {selectedDataset === "DB1" && (
-                        <tr>
-                          <td className="p-2.5 font-mono text-slate-700">&quot;Est SC Volume&quot;</td>
-                          <td className="p-2.5 font-bold text-[#0B2D45]">est_sc_volume_ml</td>
-                          <td className="p-2.5 text-emerald-700 font-semibold">✓ Mapped</td>
-                        </tr>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {fileHeaders.map((header, index) => (
+                    <div key={index} className="rounded-lg border border-[#DCE6EB] p-3 space-y-1.5">
+                      <p className="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded w-fit">
+                        &quot;{header}&quot;
+                      </p>
+                      <select
+                        value={mappings[header] || ""}
+                        onChange={(e) => updateMapping(header, e.target.value || null)}
+                        className="w-full rounded-lg border border-[#DCE6EB] bg-white p-2 text-xs font-medium"
+                      >
+                        <option value="">-- Not Mapped (Skip) --</option>
+                        {Object.entries(supportedColumns).map(([colName, colDef]) => (
+                          <option key={colName} value={colName}>
+                            {colName} {colDef.required ? "(Required)" : "(Optional)"}
+                          </option>
+                        ))}
+                      </select>
+                      {mappings[header] && supportedColumns[mappings[header]]?.description && (
+                        <p className="text-[10px] text-slate-500 italic">
+                          {supportedColumns[mappings[header]!].description}
+                        </p>
                       )}
-                    </tbody>
-                  </table>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="flex justify-between pt-4 border-t border-[#DCE6EB]">
                   <button
                     onClick={() => setStep(1)}
-                    className="rounded-lg border border-slate-200 px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-50"
+                    disabled={isProcessing}
+                    className="rounded-lg border border-slate-200 px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                   >
                     Back
                   </button>
                   <button
-                    onClick={() => setStep(3)}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#135C70] px-4 py-2 font-bold text-white hover:bg-[#0B3B48]"
+                    onClick={proceedToPreview}
+                    disabled={isProcessing}
+                    className="flex items-center gap-1.5 rounded-lg bg-[#135C70] px-4 py-2 font-bold text-white hover:bg-[#0B3B48] disabled:opacity-50"
                   >
-                    <span>Proceed to Row Preview</span>
-                    <ChevronRight size={15} />
+                    {isProcessing ? (
+                      <>
+                        <Loader size={15} className="animate-spin" />
+                        <span>Validating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Proceed to Preview</span>
+                        <ChevronRight size={15} />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             )}
 
             {/* Step 3: Row Preview */}
-            {step === 3 && (
+            {step === 3 && previewData && (
               <div className="mt-5 space-y-4 text-xs">
-                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-emerald-900 flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-700" />
-                  <span>Validation check passed: 24 rows parsed, 0 critical blocking errors.</span>
+                <div
+                  className={`rounded-lg p-3 flex items-start gap-2 ${
+                    previewData.summaryStatus === "error"
+                      ? "border border-red-200 bg-red-50"
+                      : previewData.summaryStatus === "warning"
+                      ? "border border-yellow-200 bg-yellow-50"
+                      : "border border-emerald-200 bg-emerald-50"
+                  }`}
+                >
+                  {previewData.summaryStatus === "error" ? (
+                    <XCircle size={16} className="text-red-700 shrink-0 mt-0.5" />
+                  ) : previewData.summaryStatus === "warning" ? (
+                    <AlertTriangle size={16} className="text-yellow-700 shrink-0 mt-0.5" />
+                  ) : (
+                    <CheckCircle2 size={16} className="text-emerald-700 shrink-0 mt-0.5" />
+                  )}
+                  <p className="font-semibold">{previewData.summary}</p>
                 </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <label className="block font-bold text-[#0B2D45]">Duplicate Matching Key</label>
-                    <select
-                      value={matchingStrategy}
-                      onChange={(e) => setMatchingStrategy(e.target.value as any)}
-                      className="mt-1 w-full rounded-lg border border-[#DCE6EB] bg-white p-2 text-xs"
-                    >
-                      <option value="drug_name_company">Drug Name + Company (Recommended)</option>
-                      <option value="compound_id">Unique Compound ID</option>
-                    </select>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="rounded-lg bg-[#F5F8FA] p-2">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Valid</p>
+                    <p className="text-base font-bold text-[#0B2D45]">{previewData.totalValid}</p>
                   </div>
+                  <div className="rounded-lg bg-red-50 p-2">
+                    <p className="text-[10px] uppercase font-bold text-red-800">Invalid</p>
+                    <p className="text-base font-bold text-red-900">{previewData.totalInvalid}</p>
+                  </div>
+                  <div className="rounded-lg bg-yellow-50 p-2">
+                    <p className="text-[10px] uppercase font-bold text-yellow-800">Duplicates</p>
+                    <p className="text-base font-bold text-yellow-900">{previewData.duplicatesWithinBatch}</p>
+                  </div>
+                  <div className="rounded-lg bg-emerald-50 p-2">
+                    <p className="text-[10px] uppercase font-bold text-emerald-800">Importable</p>
+                    <p className="text-base font-bold text-emerald-900">{previewData.totalValid}</p>
+                  </div>
+                </div>
 
-                  <div>
-                    <label className="block font-bold text-[#0B2D45]">Import Mutation Mode</label>
-                    <div className="mt-1 grid grid-cols-2 gap-3">
-                      <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 cursor-pointer hover:bg-slate-50">
-                        <input
-                          type="radio"
-                          name="mode"
-                          checked={importMode === "upsert"}
-                          onChange={() => setImportMode("upsert")}
-                        />
-                        <span>Upsert (Update existing & insert new)</span>
-                      </label>
-                      <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5 cursor-pointer hover:bg-slate-50">
-                        <input
-                          type="radio"
-                          name="mode"
-                          checked={importMode === "insert_only"}
-                          onChange={() => setImportMode("insert_only")}
-                        />
-                        <span>Insert Only (Skip duplicates)</span>
-                      </label>
+                {previewData.invalidRows.length > 0 && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                    <p className="font-bold text-red-900 mb-2">Invalid Rows:</p>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {previewData.invalidRows.slice(0, 5).map((row, i) => (
+                        <div key={i} className="text-[10px] text-red-800">
+                          <p className="font-mono">Row {row.rowNumber}: {row.errors[0]?.message}</p>
+                        </div>
+                      ))}
+                      {previewData.invalidRows.length > 5 && (
+                        <p className="text-[10px] text-red-700 pt-1">
+                          ... and {previewData.invalidRows.length - 5} more rows with errors
+                        </p>
+                      )}
                     </div>
                   </div>
+                )}
+
+                <div className="rounded-lg border border-[#DCE6EB] p-3 space-y-2">
+                  <p className="font-bold text-[#0B2D45]">Duplicate Handling</p>
+                  <select
+                    value={matchingStrategy}
+                    onChange={(e) => setMatchingStrategy(e.target.value as any)}
+                    className="w-full rounded-lg border border-[#DCE6EB] bg-white p-2 text-xs"
+                  >
+                    <option value="drug_name_company">Match by Drug Name + Company</option>
+                    <option value="compound_id">Match by Compound ID (if available)</option>
+                  </select>
+                  <p className="text-[10px] text-slate-500">Duplicates will be skipped during import.</p>
                 </div>
 
                 <div className="flex justify-between pt-4 border-t border-[#DCE6EB]">
                   <button
                     onClick={() => setStep(2)}
-                    className="rounded-lg border border-slate-200 px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-50"
+                    disabled={isProcessing || previewData.totalInvalid > 0}
+                    className="rounded-lg border border-slate-200 px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                   >
-                    Back
+                    Back to Mapping
                   </button>
                   <button
                     onClick={() => setStep(4)}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#135C70] px-4 py-2 font-bold text-white hover:bg-[#0B3B48]"
+                    disabled={isProcessing || previewData.totalValid === 0}
+                    className="flex items-center gap-1.5 rounded-lg bg-[#135C70] px-4 py-2 font-bold text-white hover:bg-[#0B3B48] disabled:opacity-50"
                   >
-                    <span>Ready for Confirmation</span>
+                    <span>Ready to Import</span>
                     <ChevronRight size={15} />
                   </button>
                 </div>
@@ -480,46 +737,75 @@ export default function AdminImportsPage() {
             )}
 
             {/* Step 4: Confirmation */}
-            {step === 4 && (
+            {step === 4 && previewData && (
               <div className="mt-5 space-y-4 text-xs">
                 <div className="rounded-xl border border-slate-200 bg-[#F5F8FA] p-4 space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">File to import:</span>
-                    <span className="font-bold text-[#0B2D45]">{fileName}</span>
+                    <span className="text-slate-500">File:</span>
+                    <span className="font-bold text-[#0B2D45]">{uploadedFile?.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Target database:</span>
+                    <span className="text-slate-500">Target Database:</span>
                     <span className="font-bold text-[#135C70]">{selectedDataset}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Matching strategy:</span>
+                    <span className="text-slate-500">Duplicate Matching:</span>
                     <span className="font-semibold text-slate-700">{matchingStrategy}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Mode:</span>
-                    <span className="font-semibold text-slate-700 uppercase">{importMode}</span>
-                  </div>
                   <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-[#0B2D45]">
-                    <span>Expected changes:</span>
-                    <span>21 to insert, 3 to update</span>
+                    <span>Will import:</span>
+                    <span>{previewData.totalValid} rows</span>
                   </div>
                 </div>
+
+                {importResult && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                    <div className="font-bold text-emerald-900 mb-2">Import Completed</div>
+                    <div className="space-y-1 text-[10px] text-emerald-800">
+                      <p>✓ Inserted: {importResult.insertedCount}</p>
+                      <p>✓ Updated: {importResult.updatedCount}</p>
+                      <p>✓ Skipped: {importResult.skippedCount}</p>
+                      {importResult.failedCount > 0 && (
+                        <p>✗ Failed: {importResult.failedCount}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-between pt-4 border-t border-[#DCE6EB]">
                   <button
                     onClick={() => setStep(3)}
-                    disabled={isProcessing}
-                    className="rounded-lg border border-slate-200 px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-50"
+                    disabled={isProcessing || !!importResult}
+                    className="rounded-lg border border-slate-200 px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                   >
                     Back
                   </button>
-                  <button
-                    onClick={handleExecuteImport}
-                    disabled={isProcessing}
-                    className="rounded-lg bg-[#135C70] px-5 py-2 font-bold uppercase tracking-wider text-white hover:bg-[#0B3B48] disabled:opacity-50"
-                  >
-                    {isProcessing ? "Processing batch transaction..." : "Commit Import"}
-                  </button>
+                  {!importResult ? (
+                    <button
+                      onClick={handleExecuteImport}
+                      disabled={isProcessing}
+                      className="rounded-lg bg-[#135C70] px-5 py-2 font-bold uppercase tracking-wider text-white hover:bg-[#0B3B48] disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader size={15} className="animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={15} />
+                          <span>Commit Import</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={closeWizard}
+                      className="rounded-lg bg-emerald-600 px-5 py-2 font-bold uppercase text-white hover:bg-emerald-700"
+                    >
+                      Done
+                    </button>
+                  )}
                 </div>
               </div>
             )}

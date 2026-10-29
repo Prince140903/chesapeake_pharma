@@ -11,6 +11,7 @@ import {
   INITIAL_MOCK_SUBSCRIPTIONS,
   INITIAL_MOCK_IMPORTS
 } from "@/lib/admin-mock-data";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export interface ToastMessage {
   id: string;
@@ -64,6 +65,42 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>(INITIAL_MOCK_SUBSCRIPTIONS);
   const [imports, setImports] = useState<AdminImportJob[]>(INITIAL_MOCK_IMPORTS);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
+
+  // Hydrate authentication state from Supabase session on mount
+  useEffect(() => {
+    const hydrateAuth = async () => {
+      if (!isSupabaseConfigured()) {
+        setIsHydrated(true);
+        return;
+      }
+
+      const supabase = createClient();
+      if (!supabase) {
+        setIsHydrated(true);
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          setIsAuthenticated(true);
+          setAdminUser({
+            ...INITIAL_MOCK_USERS[5],
+            id: user.id,
+            email: user.email || INITIAL_MOCK_USERS[5].email
+          });
+        }
+      } catch (error) {
+        console.error("Auth hydration error:", error);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    hydrateAuth();
+  }, []);
 
   const addToast = (toast: Omit<ToastMessage, "id">) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -104,8 +141,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (isSupabaseConfigured()) {
+      const supabase = createClient();
+      if (supabase) {
+        try {
+          await supabase.auth.signOut();
+        } catch (error) {
+          console.error("Sign out error:", error);
+        }
+      }
+    }
+    
     setIsAuthenticated(false);
+    setAdminUser(null);
     addToast({
       type: "info",
       title: "Logged Out",
