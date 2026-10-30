@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Pill,
   Search,
@@ -18,10 +18,12 @@ import {
   AlertTriangle,
   FileText,
   Building,
-  Check
+  Check,
+  Link as LinkIcon
 } from "lucide-react";
 import { useAdmin } from "@/components/admin/admin-context";
 import { AdminDrug } from "@/lib/admin-mock-data";
+import { fetchDrugReferencesAction, createReferenceAction, deleteReferenceAction } from "@/app/admin/drug-actions";
 
 export default function AdminDrugsPage() {
   const { drugs, addDrug, updateDrug, deleteDrug } = useAdmin();
@@ -93,6 +95,10 @@ export default function AdminDrugsPage() {
     entry_date: new Date().toISOString().split("T")[0]
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [drugReferences, setDrugReferences] = useState<any[]>([]);
+  const [newReference, setNewReference] = useState("");
+
   const openAddModal = () => {
     setFormData({
       dataset_type: activeDataset,
@@ -117,17 +123,24 @@ export default function AdminDrugsPage() {
     setIsAddOpen(true);
   };
 
-  const openEditModal = (drug: AdminDrug) => {
+  const openEditModal = async (drug: AdminDrug) => {
     setSelectedDrug(drug);
     setFormData({ ...drug });
     setIsEditOpen(true);
+    
+    // Fetch references for this drug
+    const refsResponse = await fetchDrugReferencesAction(drug.id);
+    if (refsResponse.success) {
+      setDrugReferences(refsResponse.data || []);
+    }
   };
 
-  const handleSaveAdd = (e: React.FormEvent) => {
+  const handleSaveAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.drug_name || !formData.company) return;
 
-    addDrug({
+    setIsLoading(true);
+    await addDrug({
       dataset_type: activeDataset,
       drug_name: formData.drug_name || "Untitled Compound",
       company: formData.company || "Unknown Company",
@@ -148,28 +161,56 @@ export default function AdminDrugsPage() {
       entry_date: formData.entry_date || new Date().toISOString().split("T")[0],
       references: []
     });
-
+    setIsLoading(false);
     setIsAddOpen(false);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDrug) return;
 
-    updateDrug(selectedDrug.id, {
+    setIsLoading(true);
+    await updateDrug(selectedDrug.id, {
       ...formData,
       // preserve entry_date unless modified
       entry_date: formData.entry_date || selectedDrug.entry_date
     });
-
+    setIsLoading(false);
     setIsEditOpen(false);
     setSelectedDrug(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteConfirmDrug) return;
-    deleteDrug(deleteConfirmDrug.id);
+    setIsLoading(true);
+    await deleteDrug(deleteConfirmDrug.id);
+    setIsLoading(false);
     setDeleteConfirmDrug(null);
+  };
+
+  const handleAddReference = async () => {
+    if (!selectedDrug || !newReference.trim()) return;
+
+    setIsLoading(true);
+    const refResponse = await createReferenceAction(selectedDrug.id, {
+      reference_value: newReference.trim(),
+      reference_order: drugReferences.length + 1
+    });
+
+    if (refResponse.success) {
+      setDrugReferences([...drugReferences, refResponse.data]);
+      setNewReference("");
+    }
+    setIsLoading(false);
+  };
+
+  const handleRemoveReference = async (refId: string) => {
+    setIsLoading(true);
+    const response = await deleteReferenceAction(refId);
+    if (response.success) {
+      setDrugReferences(drugReferences.filter(r => r.id !== refId));
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -271,7 +312,7 @@ export default function AdminDrugsPage() {
       {/* Drugs Table */}
       <div className="overflow-hidden rounded-xl border border-[#DCE6EB] bg-white shadow-card">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-[#082236] text-white">
               <tr>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Drug Name</th>
@@ -683,22 +724,87 @@ export default function AdminDrugsPage() {
                 </div>
               </div>
 
+              {/* References Section */}
+              {isEditOpen && selectedDrug && (
+                <div className="mt-6 border-t border-[#DCE6EB] pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block font-bold text-[#0B2D45] flex items-center gap-2">
+                      <LinkIcon size={14} />
+                      Linked Citations & References
+                    </label>
+                    <span className="text-xs text-slate-500">({drugReferences.length})</span>
+                  </div>
+
+                  {/* Reference List */}
+                  {drugReferences.length > 0 && (
+                    <div className="mb-4 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50">
+                      {drugReferences.map((ref, idx) => (
+                        <div key={ref.id} className="flex items-center justify-between border-b border-slate-200 p-3 last:border-b-0 hover:bg-white transition">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-[#0B2D45] truncate">{ref.reference_value}</p>
+                            <p className="text-[10px] text-slate-500">Order: {ref.reference_order}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveReference(ref.id)}
+                            disabled={isLoading}
+                            className="ml-2 rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                            title="Remove reference"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Reference Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add new reference (e.g., Clinical Trial XYZ, FDA Approval Document)"
+                      value={newReference}
+                      onChange={(e) => setNewReference(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleAddReference();
+                        }
+                      }}
+                      className="flex-1 rounded-lg border border-[#DCE6EB] px-3 py-2 text-xs focus:border-[#42B7B9]"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddReference}
+                      disabled={isLoading || !newReference.trim()}
+                      className="rounded-lg bg-[#42B7B9] px-3 py-2 text-xs font-bold text-white hover:bg-[#2a9a9d] disabled:opacity-50"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 flex items-center justify-end gap-3 border-t border-[#DCE6EB] pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAddOpen(false);
                     setIsEditOpen(false);
+                    setDrugReferences([]);
+                    setNewReference("");
                   }}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  disabled={isLoading}
+                  className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#135C70] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#0B3B48]"
+                  disabled={isLoading}
+                  className="rounded-lg bg-[#135C70] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#0B3B48] disabled:opacity-50"
                 >
-                  {isAddOpen ? "Create Drug Record" : "Save Changes"}
+                  {isLoading ? "Saving..." : isAddOpen ? "Create Drug Record" : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -730,15 +836,17 @@ export default function AdminDrugsPage() {
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirmDrug(null)}
-                className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                disabled={isLoading}
+                className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700"
+                disabled={isLoading}
+                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
               >
-                Delete Record
+                {isLoading ? "Deleting..." : "Delete Record"}
               </button>
             </div>
           </div>

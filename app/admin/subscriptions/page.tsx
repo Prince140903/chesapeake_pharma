@@ -31,6 +31,7 @@ export default function AdminSubscriptionsPage() {
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedSub, setSelectedSub] = useState<AdminSubscription | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // New Subscription Form State
   const defaultStartDate = new Date().toISOString().split("T")[0];
@@ -92,12 +93,13 @@ export default function AdminSubscriptionsPage() {
     });
   }, [subscriptions, datasetFilter, statusFilter, searchQuery]);
 
-  const handleCreateSubscription = (e: React.FormEvent) => {
+  const handleCreateSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
     const user = users.find((u) => u.id === formData.user_id);
     if (!user) return;
 
-    addSubscription({
+    setIsLoading(true);
+    await addSubscription({
       user_id: user.id,
       user_name: user.full_name,
       user_email: user.email,
@@ -107,11 +109,11 @@ export default function AdminSubscriptionsPage() {
       starts_at: formData.starts_at,
       expires_at: formData.expires_at,
       renewal_date: formData.renewal_date,
-      activated_by: "Philip Green (Admin)",
+      activated_by: "Admin",
       payment_reference: formData.payment_reference || `INV-${Date.now().toString().slice(-5)}`,
       admin_notes: formData.admin_notes || "Standard 1-year access agreement."
     });
-
+    setIsLoading(false);
     setIsAddOpen(false);
   };
 
@@ -299,15 +301,23 @@ export default function AdminSubscriptionsPage() {
                         <div className="flex items-center justify-end gap-1.5">
                           {sub.status === "active" ? (
                             <button
-                              onClick={() => toggleSubscriptionStatus(sub.id, "deactivated")}
-                              className="rounded bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-100 border border-rose-200"
+                              onClick={() => {
+                                setIsLoading(true);
+                                toggleSubscriptionStatus(sub.id, "deactivated").finally(() => setIsLoading(false));
+                              }}
+                              disabled={isLoading}
+                              className="rounded bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-100 border border-rose-200 disabled:opacity-50"
                             >
                               Deactivate
                             </button>
                           ) : (
                             <button
-                              onClick={() => toggleSubscriptionStatus(sub.id, "active")}
-                              className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
+                              onClick={() => {
+                                setIsLoading(true);
+                                toggleSubscriptionStatus(sub.id, "active").finally(() => setIsLoading(false));
+                              }}
+                              disabled={isLoading}
+                              className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-100 border border-emerald-200 disabled:opacity-50"
                             >
                               Reactivate
                             </button>
@@ -430,15 +440,17 @@ export default function AdminSubscriptionsPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  disabled={isLoading}
+                  className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#135C70] px-4 py-2 text-xs font-bold text-white hover:bg-[#0B3B48]"
+                  disabled={isLoading}
+                  className="rounded-lg bg-[#135C70] px-4 py-2 text-xs font-bold text-white hover:bg-[#0B3B48] disabled:opacity-50"
                 >
-                  Activate Subscription
+                  {isLoading ? "Activating..." : "Activate Subscription"}
                 </button>
               </div>
             </form>

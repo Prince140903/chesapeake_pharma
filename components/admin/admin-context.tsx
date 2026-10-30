@@ -12,6 +12,22 @@ import {
   INITIAL_MOCK_IMPORTS
 } from "@/lib/admin-mock-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  fetchDrugsAction,
+  createDrugAction,
+  updateDrugAction,
+  deleteDrugAction
+} from "@/app/admin/drug-actions";
+import {
+  fetchUsersAction,
+  approveUserAction,
+  rejectUserAction
+} from "@/app/admin/user-actions";
+import {
+  fetchSubscriptionsAction,
+  createSubscriptionAction,
+  updateSubscriptionStatusAction
+} from "@/app/admin/subscription-actions";
 
 export interface ToastMessage {
   id: string;
@@ -34,17 +50,17 @@ interface AdminContextType {
   imports: AdminImportJob[];
 
   // Drug actions
-  addDrug: (drug: Omit<AdminDrug, "id" | "created_at" | "updated_at">) => void;
-  updateDrug: (id: string, drug: Partial<AdminDrug>) => void;
-  deleteDrug: (id: string) => void;
+  addDrug: (drug: Omit<AdminDrug, "id" | "created_at" | "updated_at">) => Promise<void>;
+  updateDrug: (id: string, drug: Partial<AdminDrug>) => Promise<void>;
+  deleteDrug: (id: string) => Promise<void>;
 
   // User actions
-  approveUser: (id: string, notes?: string) => void;
-  rejectUser: (id: string, reason?: string) => void;
+  approveUser: (id: string, notes?: string) => Promise<void>;
+  rejectUser: (id: string, reason?: string) => Promise<void>;
 
   // Subscription actions
-  addSubscription: (sub: Omit<AdminSubscription, "id" | "created_at">) => void;
-  toggleSubscriptionStatus: (id: string, newStatus: AdminSubscription["status"]) => void;
+  addSubscription: (sub: Omit<AdminSubscription, "id" | "created_at">) => Promise<void>;
+  toggleSubscriptionStatus: (id: string, newStatus: AdminSubscription["status"]) => Promise<void>;
 
   // Import actions
   addImportJob: (job: Omit<AdminImportJob, "id" | "created_at">) => void;
@@ -67,7 +83,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
-  // Hydrate authentication state from Supabase session on mount
+  // Hydrate authentication state from Supabase session and fetch data from DB
   useEffect(() => {
     const hydrateAuth = async () => {
       if (!isSupabaseConfigured()) {
@@ -91,6 +107,23 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             id: user.id,
             email: user.email || INITIAL_MOCK_USERS[5].email
           });
+
+          // Fetch drugs, users, and subscriptions from database
+          const [drugsResponse, usersResponse, subscriptionsResponse] = await Promise.all([
+            fetchDrugsAction(),
+            fetchUsersAction(),
+            fetchSubscriptionsAction()
+          ]);
+
+          if (drugsResponse.success && drugsResponse.data) {
+            setDrugs(drugsResponse.data);
+          }
+          if (usersResponse.success && usersResponse.data) {
+            setUsers(usersResponse.data);
+          }
+          if (subscriptionsResponse.success && subscriptionsResponse.data) {
+            setSubscriptions(subscriptionsResponse.data);
+          }
         }
       } catch (error) {
         console.error("Auth hydration error:", error);
@@ -166,109 +199,309 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated((prev) => !prev);
   };
 
-  const addDrug = (newDrug: Omit<AdminDrug, "id" | "created_at" | "updated_at">) => {
-    const id = `${newDrug.dataset_type.toLowerCase()}-${Date.now().toString().slice(-4)}`;
-    const now = new Date().toISOString();
-    const created: AdminDrug = {
-      ...newDrug,
-      id,
-      created_at: now,
-      updated_at: now
-    };
-    setDrugs((prev) => [created, ...prev]);
-    addToast({
-      type: "success",
-      title: `Drug Record Created (${created.dataset_type})`,
-      message: `${created.drug_name} has been added to mock dataset.`
-    });
+  const addDrug = async (newDrug: Omit<AdminDrug, "id" | "created_at" | "updated_at">) => {
+    try {
+      // If Supabase is configured, use server action
+      if (isSupabaseConfigured()) {
+        const response = await createDrugAction(newDrug);
+        if (response.success && response.data) {
+          setDrugs((prev) => [response.data as AdminDrug, ...prev]);
+          addToast({
+            type: "success",
+            title: `Drug Record Created (${response.data.dataset_type})`,
+            message: `${response.data.drug_name} has been added to the database.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error Creating Drug",
+            message: response.error || "Failed to create drug record"
+          });
+        }
+      } else {
+        // Fallback to demo mode
+        const id = `${newDrug.dataset_type.toLowerCase()}-${Date.now().toString().slice(-4)}`;
+        const now = new Date().toISOString();
+        const created: AdminDrug = {
+          ...newDrug,
+          id,
+          created_at: now,
+          updated_at: now
+        };
+        setDrugs((prev) => [created, ...prev]);
+        addToast({
+          type: "success",
+          title: `Drug Record Created (${created.dataset_type})`,
+          message: `${created.drug_name} has been added to demo dataset.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
-  const updateDrug = (id: string, updatedFields: Partial<AdminDrug>) => {
-    const now = new Date().toISOString();
-    setDrugs((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, ...updatedFields, updated_at: now } : d))
-    );
-    addToast({
-      type: "success",
-      title: "Drug Record Updated",
-      message: `Changes saved to drug ${id}.`
-    });
+  const updateDrug = async (id: string, updatedFields: Partial<AdminDrug>) => {
+    try {
+      // If Supabase is configured, use server action
+      if (isSupabaseConfigured()) {
+        const response = await updateDrugAction(id, updatedFields);
+        if (response.success && response.data) {
+          setDrugs((prev) =>
+            prev.map((d) => (d.id === id ? (response.data as AdminDrug) : d))
+          );
+          addToast({
+            type: "success",
+            title: "Drug Record Updated",
+            message: `Changes saved to ${response.data.drug_name}.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error Updating Drug",
+            message: response.error || "Failed to update drug record"
+          });
+        }
+      } else {
+        // Fallback to demo mode
+        const now = new Date().toISOString();
+        setDrugs((prev) =>
+          prev.map((d) => (d.id === id ? { ...d, ...updatedFields, updated_at: now } : d))
+        );
+        addToast({
+          type: "success",
+          title: "Drug Record Updated",
+          message: `Changes saved to drug ${id}.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
-  const deleteDrug = (id: string) => {
-    const target = drugs.find((d) => d.id === id);
-    setDrugs((prev) => prev.filter((d) => d.id !== id));
-    addToast({
-      type: "warning",
-      title: "Drug Record Deleted",
-      message: target ? `${target.drug_name} was removed.` : `Record ${id} was deleted.`
-    });
+  const deleteDrug = async (id: string) => {
+    try {
+      const target = drugs.find((d) => d.id === id);
+      
+      // If Supabase is configured, use server action
+      if (isSupabaseConfigured()) {
+        const response = await deleteDrugAction(id);
+        if (response.success) {
+          setDrugs((prev) => prev.filter((d) => d.id !== id));
+          addToast({
+            type: "warning",
+            title: "Drug Record Deleted",
+            message: target ? `${target.drug_name} was removed.` : `Record ${id} was deleted.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error Deleting Drug",
+            message: response.error || "Failed to delete drug record"
+          });
+        }
+      } else {
+        // Fallback to demo mode
+        setDrugs((prev) => prev.filter((d) => d.id !== id));
+        addToast({
+          type: "warning",
+          title: "Drug Record Deleted",
+          message: target ? `${target.drug_name} was removed.` : `Record ${id} was deleted.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
-  const approveUser = (id: string, notes?: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? {
-              ...u,
-              approval_status: "approved",
-              notes: notes || u.notes
-            }
-          : u
-      )
-    );
-    const user = users.find((u) => u.id === id);
-    addToast({
-      type: "success",
-      title: "User Approved",
-      message: `${user?.full_name || "User"} marked as approved. Remember to activate subscription packs separately.`
-    });
+  const approveUser = async (id: string, notes?: string) => {
+    try {
+      if (isSupabaseConfigured()) {
+        const response = await approveUserAction(id, notes);
+        if (response.success && response.data) {
+          setUsers((prev) =>
+            prev.map((u) => (u.id === id ? response.data as AdminUser : u))
+          );
+          addToast({
+            type: "success",
+            title: "User Approved",
+            message: `${response.data.full_name} has been approved.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error",
+            message: response.error || "Failed to approve user"
+          });
+        }
+      } else {
+        // Demo mode
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === id
+              ? {
+                  ...u,
+                  approval_status: "approved",
+                  notes: notes || u.notes
+                }
+              : u
+          )
+        );
+        addToast({
+          type: "success",
+          title: "User Approved",
+          message: `User marked as approved.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
-  const rejectUser = (id: string, reason?: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? {
-              ...u,
-              approval_status: "rejected",
-              notes: reason ? `Rejected: ${reason}` : u.notes
-            }
-          : u
-      )
-    );
-    addToast({
-      type: "warning",
-      title: "User Request Rejected",
-      message: `Access denied for user ${id}.`
-    });
+  const rejectUser = async (id: string, reason?: string) => {
+    try {
+      if (isSupabaseConfigured()) {
+        const response = await rejectUserAction(id, reason || "Declined during commercial verification");
+        if (response.success && response.data) {
+          setUsers((prev) =>
+            prev.map((u) => (u.id === id ? response.data as AdminUser : u))
+          );
+          addToast({
+            type: "warning",
+            title: "User Rejected",
+            message: `Access denied for user ${id}.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error",
+            message: response.error || "Failed to reject user"
+          });
+        }
+      } else {
+        // Demo mode
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === id
+              ? {
+                  ...u,
+                  approval_status: "rejected",
+                  notes: reason ? `Rejected: ${reason}` : u.notes
+                }
+              : u
+          )
+        );
+        addToast({
+          type: "warning",
+          title: "User Rejected",
+          message: `Access denied for user ${id}.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
-  const addSubscription = (sub: Omit<AdminSubscription, "id" | "created_at">) => {
-    const id = `sub-${Date.now().toString().slice(-4)}`;
-    const now = new Date().toISOString();
-    const created: AdminSubscription = {
-      ...sub,
-      id,
-      created_at: now
-    };
-    setSubscriptions((prev) => [created, ...prev]);
-    addToast({
-      type: "success",
-      title: `Subscription Activated (${created.dataset_type})`,
-      message: `1-Year term granted to ${created.company_name} ending on ${created.expires_at}.`
-    });
+  const addSubscription = async (sub: Omit<AdminSubscription, "id" | "created_at">) => {
+    try {
+      if (isSupabaseConfigured()) {
+        const response = await createSubscriptionAction(sub);
+        if (response.success && response.data) {
+          setSubscriptions((prev) => [response.data as AdminSubscription, ...prev]);
+          addToast({
+            type: "success",
+            title: `Subscription Activated (${response.data.dataset_type})`,
+            message: `1-Year term granted to ${response.data.company_name}.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error",
+            message: response.error || "Failed to create subscription"
+          });
+        }
+      } else {
+        // Demo mode
+        const id = `sub-${Date.now().toString().slice(-4)}`;
+        const now = new Date().toISOString();
+        const created: AdminSubscription = {
+          ...sub,
+          id,
+          created_at: now
+        };
+        setSubscriptions((prev) => [created, ...prev]);
+        addToast({
+          type: "success",
+          title: `Subscription Activated (${created.dataset_type})`,
+          message: `1-Year term granted to ${created.company_name}.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
-  const toggleSubscriptionStatus = (id: string, newStatus: AdminSubscription["status"]) => {
-    setSubscriptions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s))
-    );
-    addToast({
-      type: "info",
-      title: "Subscription Status Changed",
-      message: `Subscription ${id} is now ${newStatus}.`
-    });
+  const toggleSubscriptionStatus = async (id: string, newStatus: AdminSubscription["status"]) => {
+    try {
+      if (isSupabaseConfigured()) {
+        const response = await updateSubscriptionStatusAction(id, newStatus);
+        if (response.success && response.data) {
+          setSubscriptions((prev) =>
+            prev.map((s) => (s.id === id ? response.data as AdminSubscription : s))
+          );
+          addToast({
+            type: "info",
+            title: "Subscription Status Changed",
+            message: `Subscription ${id} is now ${newStatus}.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error",
+            message: response.error || "Failed to update subscription"
+          });
+        }
+      } else {
+        // Demo mode
+        setSubscriptions((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s))
+        );
+        addToast({
+          type: "info",
+          title: "Subscription Status Changed",
+          message: `Subscription ${id} is now ${newStatus}.`
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   };
 
   const addImportJob = (job: Omit<AdminImportJob, "id" | "created_at">) => {
