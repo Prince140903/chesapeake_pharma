@@ -208,6 +208,49 @@ export function normalizeHeaderName(header: string): string {
 }
 
 /**
+ * Auto-detect reference columns and consolidate them
+ * Looks for columns matching reference aliases and combines them into a single references array
+ */
+export function consolidateReferenceColumns(
+  row: Record<string, any>,
+  headers: string[],
+  mappings: Record<string, string | null>
+): { 
+  consolidatedRow: Record<string, any>; 
+  referenceValues: string[] 
+} {
+  const referenceAliases = ["ref", "reference", "references", "citations", "sources"];
+  const referenceValues: string[] = [];
+  const consolidatedRow = { ...row };
+
+  // Find all columns that look like reference fields
+  for (const header of headers) {
+    const normalizedHeader = normalizeHeaderName(header);
+    
+    // Check if this column is a reference-like field
+    const isRefColumn = referenceAliases.some(alias => 
+      normalizedHeader.includes(alias) || normalizedHeader.startsWith(alias)
+    );
+
+    if (isRefColumn && consolidatedRow[header]) {
+      const value = String(consolidatedRow[header]).trim();
+      if (value) {
+        referenceValues.push(value);
+      }
+      // Remove individual ref columns from row (they'll be consolidated)
+      delete consolidatedRow[header];
+    }
+  }
+
+  // If we found references, add them as a single "references" field
+  if (referenceValues.length > 0) {
+    consolidatedRow.references = referenceValues.join("; ");
+  }
+
+  return { consolidatedRow, referenceValues };
+}
+
+/**
  * Check if two header names likely refer to the same column
  */
 export function headerMatch(headerName: string, columnName: string, aliases: string[] = []): boolean {
@@ -232,14 +275,27 @@ export function suggestColumnMappings(
   supportedColumns: Record<string, { aliases?: string[]; required: boolean }>
 ): Record<string, string | null> {
   const suggestions: Record<string, string | null> = {};
+  const referenceAliases = ["ref", "reference", "references", "citations", "sources"];
 
   for (const header of uploadedHeaders) {
     let bestMatch: string | null = null;
+    const normalizedHeader = normalizeHeaderName(header);
 
-    for (const [columnName, config] of Object.entries(supportedColumns)) {
-      if (headerMatch(header, columnName, config.aliases)) {
-        bestMatch = columnName;
-        break;
+    // Check if this is a reference column (Ref1, Ref2, Ref3, etc.)
+    const isRefColumn = referenceAliases.some(alias => 
+      normalizedHeader.includes(alias) || normalizedHeader.startsWith(alias)
+    );
+
+    if (isRefColumn) {
+      // All reference columns map to the single "references" field
+      bestMatch = "references";
+    } else {
+      // Try to match other columns normally
+      for (const [columnName, config] of Object.entries(supportedColumns)) {
+        if (headerMatch(header, columnName, config.aliases)) {
+          bestMatch = columnName;
+          break;
+        }
       }
     }
 

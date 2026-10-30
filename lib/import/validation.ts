@@ -4,6 +4,7 @@
  */
 
 import { DatasetType, getDatasetColumns, isColumnRequired } from "./schema";
+import { consolidateReferenceColumns } from "./file-parser";
 
 export interface ValidationResult {
   valid: boolean;
@@ -56,11 +57,42 @@ export function validateRow(
   // Track which database columns received values
   const filledColumns = new Set<string>();
   let referencesArray: Array<{ source: string; title: string }> | null = null;
+  
+  // Check if references field was already consolidated in the row
+  if (row.references && typeof row.references === "string") {
+    const refString = row.references;
+    const refs = refString
+      .split(";")
+      .map((ref) => ref.trim())
+      .filter((ref) => ref.length > 0)
+      .map((title) => ({
+        source: "import",
+        title: title
+      }));
+    if (refs.length > 0) {
+      referencesArray = refs;
+    }
+  }
+
+  // If we have consolidated references, mark the "references" field as filled
+  if (referencesArray && referencesArray.length > 0) {
+    filledColumns.add("references");
+  }
 
   // Process each uploaded header
   for (const [uploadedHeader, dbColumnName] of Object.entries(uploadedHeaderToColumn)) {
     if (!dbColumnName) {
       // This header is not mapped - skip it
+      continue;
+    }
+
+    // Skip processing individual reference columns since they've been consolidated
+    const isIndividualRefColumn = 
+      uploadedHeader.toLowerCase().includes("ref") && 
+      dbColumnName === "references";
+    
+    if (isIndividualRefColumn && referencesArray !== null) {
+      // Already consolidated, skip this individual ref column
       continue;
     }
 
@@ -129,7 +161,12 @@ export function validateRow(
 
     // Special handling for references field
     if (dbColumnName === "references") {
-      // Run transformer to parse references
+      // If we've already consolidated references from individual columns, use those
+      if (referencesArray && referencesArray.length > 0) {
+        continue; // Skip processing this header, we already have consolidated refs
+      }
+      
+      // Otherwise, try to parse this single "references" column
       if (columnDef.transformer) {
         try {
           const transformed = columnDef.transformer(value);
@@ -236,7 +273,8 @@ export function validateRow(
 export function validateRows(
   rows: Record<string, any>[],
   datasetType: DatasetType,
-  mappings: Record<string, string | null>
+  mappings: Record<string, string | null>,
+  headers?: string[]
 ): {
   validRows: Record<string, any>[];
   invalidRows: RowValidationResult[];
@@ -246,8 +284,19 @@ export function validateRows(
   const validRows: Record<string, any>[] = [];
   const invalidRows: RowValidationResult[] = [];
 
+  // Extract headers from the first row's keys if not provided
+  const uploadedHeaders = headers || (rows.length > 0 ? Object.keys(rows[0]) : []);
+
   for (let i = 0; i < rows.length; i++) {
-    const result = validateRow(rows[i], i + 1, datasetType, mappings); // +1 because row 1 is headers
+    let row = rows[i];
+    
+    // Consolidate reference columns (Ref1, Ref2, etc.) into a single references array
+    if (uploadedHeaders.length > 0) {
+      const { consolidatedRow } = consolidateReferenceColumns(row, uploadedHeaders, mappings);
+      row = consolidatedRow;
+    }
+    
+    const result = validateRow(row, i + 1, datasetType, mappings); // +1 because row 1 is headers
     
     // Valid rows pass validation
     if (result.valid && result.transformedRow) {

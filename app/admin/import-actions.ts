@@ -22,7 +22,7 @@ const fileChunkStore = new Map<string, {
   chunks: Buffer[]; 
   totalSize: number; 
   lastAccess: number;
-  parsedData?: { headers: string[]; rows: Record<string, any>[]; fileName: string };
+  parsedData?: { headers: string[]; rows: Record<string, any>[]; fileName: string; fileType: "csv" | "xlsx" };
 }>();
 
 /**
@@ -112,7 +112,8 @@ export async function parseUploadedFileAction(
     session.parsedData = {
       headers: parsed.headers,
       rows: parsed.rows,
-      fileName: parsed.fileName
+      fileName: parsed.fileName,
+      fileType: parsed.fileType
     };
     session.lastAccess = Date.now(); // Update last access time
 
@@ -228,8 +229,9 @@ export async function validateMappingsAndPreviewAction(
       };
     }
 
-    // Validate all rows
-    const validation = validateRows(rows, datasetType, mappings);
+    // Validate all rows with header info for reference consolidation
+    const previewHeaders = session.parsedData?.headers || Object.keys(rows[0] || {});
+    const validation = validateRows(rows, datasetType, mappings, previewHeaders);
 
     // Detect duplicates within batch
     const { duplicates } = detectDuplicates(validation.validRows, "drug_name_company");
@@ -364,8 +366,9 @@ export async function executeImportAction(
       };
     }
 
-    // Validate all rows
-    const validation = validateRows(rows, datasetType, mappings);
+    // Validate all rows with header info for reference consolidation
+    const executionHeaders = session.parsedData?.headers || Object.keys(rows[0] || {});
+    const validation = validateRows(rows, datasetType, mappings, executionHeaders);
 
     if (validation.totalInvalid > 0) {
       const invalidMessages = validation.invalidRows
@@ -383,9 +386,11 @@ export async function executeImportAction(
     const importResult = await insertDrugsInBatches(validation.validRows, datasetType);
 
     // Record import job
+    const fileFormat = session.parsedData?.fileType || "csv";
     const jobRecord = await recordImportJob({
       dataset_type: datasetType,
       file_name: fileName,
+      file_format: fileFormat,
       file_size_bytes: rows.length * 100, // Rough estimate
       uploaded_by_user_id: user.id,
       total_rows: rows.length,

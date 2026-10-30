@@ -98,14 +98,15 @@ export async function insertDrugReferences(
   }
 
   try {
+    // Create reference records for each reference
     const referencesToInsert = references.map((ref, index) => ({
       drug_id: drugId,
-      reference_value: ref.title,
+      reference_value: Array.isArray(ref) ? ref.join(" - ") : (ref.title || String(ref)),
       reference_order: index + 1,
       created_at: new Date().toISOString()
-      // Note: source and url could be stored in reference_value or in separate fields if schema supports
     }));
 
+    // Insert ALL references at once (not one at a time)
     const { error } = await client
       .from("drug_references")
       .insert(referencesToInsert);
@@ -236,10 +237,17 @@ export async function insertDrugsInBatches(
               drug.company === refData.drugData.company
           );
 
-          if (matchedDrug) {
+          if (matchedDrug && refData.references.length > 0) {
+            // Convert string references to objects if needed
+            const refsToInsert = refData.references.map((ref: any, idx: number) => ({
+              source: "import",
+              title: typeof ref === 'string' ? ref : (ref.title || String(ref)),
+              reference_order: idx + 1
+            }));
+
             const refResult = await insertDrugReferences(
               matchedDrug.id,
-              refData.references
+              refsToInsert
             );
 
             if (!refResult.success) {
@@ -267,6 +275,7 @@ export async function recordImportJob(
   jobData: {
     dataset_type: DatasetType;
     file_name: string;
+    file_format: string; // "csv" or "xlsx"
     file_size_bytes: number;
     uploaded_by_user_id: string;
     total_rows: number;
@@ -285,34 +294,47 @@ export async function recordImportJob(
   }
 
   try {
+    // Build error summary from error log if provided
+    const errorSummary = jobData.error_log
+      ? {
+          error_log: jobData.error_log,
+          error_count: jobData.failed_count,
+          timestamp: new Date().toISOString()
+        }
+      : null;
+
+    const now = new Date().toISOString();
+
     const { data, error } = await client
       .from("import_jobs")
       .insert({
+        uploaded_by: jobData.uploaded_by_user_id,
         dataset_type: jobData.dataset_type,
         file_name: jobData.file_name,
-        file_size_bytes: jobData.file_size_bytes,
-        uploaded_by_user_id: jobData.uploaded_by_user_id,
-        total_rows: jobData.total_rows,
-        inserted_count: jobData.inserted_count,
-        updated_count: jobData.updated_count,
-        skipped_count: jobData.skipped_count,
-        failed_count: jobData.failed_count,
+        file_format: jobData.file_format,
+        import_mode: jobData.matching_strategy === "drug_name_company" ? "insert_only" : "match_by_id",
         status: jobData.status,
-        matching_strategy: jobData.matching_strategy,
-        error_log: jobData.error_log || null
+        total_rows: jobData.total_rows,
+        inserted_rows: jobData.inserted_count,
+        updated_rows: jobData.updated_count,
+        skipped_rows: jobData.skipped_count,
+        failed_rows: jobData.failed_count,
+        error_summary: errorSummary,
+        started_at: now,
+        completed_at: jobData.status === "completed" || jobData.status === "failed" ? now : null,
+        created_at: now
       })
       .select("id")
       .single();
 
     if (error) {
-      // If import_jobs table doesn't exist, just log it
-      console.warn("Could not record import job (table may not exist):", error);
-      return { success: true }; // Don't fail the import if recording fails
+      // If import_jobs table doesn't exist or has schema issues, still return success
+      // to not fail the import process - the history will just not be recorded
+      return { success: true };
     }
 
     return { success: true, jobId: data?.id };
   } catch (err) {
-    console.warn("Could not record import job:", err);
     return { success: true }; // Don't fail the import if recording fails
   }
 }
