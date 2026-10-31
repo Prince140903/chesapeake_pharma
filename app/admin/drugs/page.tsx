@@ -22,7 +22,7 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 import { useAdmin } from "@/components/admin/admin-context";
-import { AdminDrug } from "@/lib/admin-mock-data";
+import { AdminDrug } from "@/app/admin/drug-actions";
 import { fetchDrugReferencesAction, createReferenceAction, deleteReferenceAction } from "@/app/admin/drug-actions";
 
 export default function AdminDrugsPage() {

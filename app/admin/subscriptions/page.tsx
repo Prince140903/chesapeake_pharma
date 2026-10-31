@@ -20,7 +20,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { useAdmin } from "@/components/admin/admin-context";
-import { AdminSubscription } from "@/lib/admin-mock-data";
+import { AdminSubscription } from "@/app/admin/subscription-actions";
 
 export default function AdminSubscriptionsPage() {
   const { subscriptions, users, addSubscription, toggleSubscriptionStatus } = useAdmin();

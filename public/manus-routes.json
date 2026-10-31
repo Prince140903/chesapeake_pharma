@@ -9,7 +9,6 @@
     { "path": "/contact", "title": "Contact" },
     { "path": "/login", "title": "Client Login" },
     { "path": "/register", "title": "Request Database Access" },
-    { "path": "/forgot-password", "title": "Reset Access" },
     { "path": "/access-pending", "title": "Access Pending" },
     { "path": "/portal", "title": "Drug Intelligence Database" },
     { "path": "/portal/db1", "title": "DB1 Search" },

@@ -1,17 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import {
-  AdminDrug,
-  AdminUser,
-  AdminSubscription,
-  AdminImportJob,
-  INITIAL_MOCK_DRUGS,
-  INITIAL_MOCK_USERS,
-  INITIAL_MOCK_SUBSCRIPTIONS,
-  INITIAL_MOCK_IMPORTS
-} from "@/lib/admin-mock-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { AdminDrug } from "@/app/admin/drug-actions";
+import { AdminUser } from "@/app/admin/user-actions";
+import { AdminSubscription } from "@/app/admin/subscription-actions";
 import {
   fetchDrugsAction,
   createDrugAction,
@@ -28,6 +21,23 @@ import {
   createSubscriptionAction,
   updateSubscriptionStatusAction
 } from "@/app/admin/subscription-actions";
+
+export interface AdminImportJob {
+  id: string;
+  dataset_type: "DB1" | "DB2";
+  file_name: string;
+  file_size_kb: number;
+  uploaded_by: string;
+  status: "completed" | "failed" | "processing" | "staged";
+  total_rows: number;
+  inserted_count: number;
+  updated_count: number;
+  skipped_count: number;
+  failed_count: number;
+  created_at: string;
+  matching_strategy: "drug_name_company" | "compound_id" | "exact_match";
+  errors?: string[];
+}
 
 export interface ToastMessage {
   id: string;
@@ -75,11 +85,11 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // default to unauthenticated; require login
-  const [adminUser, setAdminUser] = useState<AdminUser | null>(INITIAL_MOCK_USERS[5]); // Dr. Philip Green
-  const [drugs, setDrugs] = useState<AdminDrug[]>(INITIAL_MOCK_DRUGS);
-  const [users, setUsers] = useState<AdminUser[]>(INITIAL_MOCK_USERS);
-  const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>(INITIAL_MOCK_SUBSCRIPTIONS);
-  const [imports, setImports] = useState<AdminImportJob[]>(INITIAL_MOCK_IMPORTS);
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [drugs, setDrugs] = useState<AdminDrug[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([]);
+  const [imports, setImports] = useState<AdminImportJob[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
@@ -103,9 +113,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         if (user) {
           setIsAuthenticated(true);
           setAdminUser({
-            ...INITIAL_MOCK_USERS[5],
             id: user.id,
-            email: user.email || INITIAL_MOCK_USERS[5].email
+            full_name: "Administrator",
+            email: user.email || "",
+            company_name: "Chesapeake Pharma LLC",
+            role: "admin",
+            approval_status: "approved",
+            requested_packs: "DB1 & DB2",
+            created_at: new Date().toISOString()
           });
 
           // Fetch drugs, users, and subscriptions from database
@@ -165,11 +180,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
 
     setIsAuthenticated(true);
-    setAdminUser(INITIAL_MOCK_USERS[5]);
+    setAdminUser({
+      id: "admin-user",
+      full_name: "Administrator",
+      email: email,
+      company_name: "Chesapeake Pharma LLC",
+      role: "admin",
+      approval_status: "approved",
+      requested_packs: "DB1 & DB2",
+      created_at: new Date().toISOString()
+    });
     addToast({
       type: "success",
       title: "Authenticated as Administrator",
-      message: "Welcome to Chesapeake Pharma CMS. Operating in UI prototype mode."
+      message: "Welcome to Chesapeake Pharma CMS."
     });
     return { success: true };
   };

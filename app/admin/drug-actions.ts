@@ -2,7 +2,37 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { AdminDrug } from "@/lib/admin-mock-data";
+
+export interface AdminDrug {
+  id: string;
+  dataset_type: "DB1" | "DB2";
+  drug_name: string;
+  company: string;
+  partner?: string;
+  route: string;
+  iv_shift_nce?: "IV to SC Shift" | "NCE Subcutaneous" | "Primary Injectable" | "N/A";
+  type?: string;
+  device_formulation?: string;
+  dose?: string;
+  iv_dose_mg?: string;
+  sc_dose_mg?: string;
+  est_sc_volume_ml?: string;
+  frequency?: string;
+  phase: string;
+  pharmacology?: string;
+  indication: string;
+  field?: string;
+  entry_date: string;
+  created_at: string;
+  updated_at: string;
+  references?: Array<{
+    id: string;
+    source: string;
+    title: string;
+    year?: string;
+    url?: string;
+  }>;
+}
 
 export interface DrugActionResponse<T = any> {
   success: boolean;

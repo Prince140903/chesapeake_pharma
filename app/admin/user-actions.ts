@@ -2,7 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { AdminUser } from "@/lib/admin-mock-data";
+
+export interface AdminUser {
+  id: string;
+  full_name: string;
+  email: string;
+  company_name: string;
+  role: "admin" | "subscriber";
+  approval_status: "pending" | "approved" | "rejected";
+  requested_packs: "DB1" | "DB2" | "DB1 & DB2";
+  created_at: string;
+  last_sign_in?: string;
+  notes?: string;
+}
 
 export interface UserActionResponse<T = any> {
   success: boolean;

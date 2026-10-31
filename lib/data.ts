@@ -17,56 +17,6 @@ export type DrugRecord = {
   volume?: string;
 };
 
-export const demoRecords: DrugRecord[] = [
-  {
-    id: "demo-001",
-    dataset: "DB1",
-    name: "Example SubQ Candidate A",
-    company: "Demo company — confirm",
-    partner: "Not available",
-    route: "Subcutaneous",
-    device: "Autoinjector / demo record",
-    dose: "Not available",
-    phase: "Demo status",
-    indication: "Illustrative record only",
-    therapyArea: "Drug delivery",
-    frequency: "Not available",
-    pharmacology: "Not available",
-    volume: "Not available"
-  },
-  {
-    id: "demo-002",
-    dataset: "DB1",
-    name: "Example High-Volume Formulation",
-    company: "Placeholder pending schema review",
-    partner: "Not available",
-    route: "Subcutaneous",
-    device: "On-body delivery system",
-    dose: "Not available",
-    phase: "Demo status",
-    indication: "Illustrative record only",
-    therapyArea: "Formulation strategy",
-    frequency: "Not available",
-    pharmacology: "Not available",
-    volume: "Not available"
-  },
-  {
-    id: "demo-003",
-    dataset: "DB2",
-    name: "Example Injectable Asset B",
-    company: "Demo company — confirm",
-    partner: "Not available",
-    route: "Injectable",
-    device: "Prefilled syringe / demo record",
-    dose: "Not available",
-    phase: "Demo status",
-    indication: "Illustrative record only",
-    therapyArea: "Injectable delivery",
-    frequency: "Not available",
-    pharmacology: "Not available"
-  }
-];
-
 export const services = [
   { title: "Commercial Strategy", eyebrow: "01", text: "Frame delivery choices around market needs, differentiation, and practical commercialization decisions." },
   { title: "Drug Delivery Assessment", eyebrow: "02", text: "Evaluate route, device, formulation, and volume considerations with a focused delivery lens." },

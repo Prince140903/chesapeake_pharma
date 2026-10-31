@@ -2,7 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { AdminSubscription } from "@/lib/admin-mock-data";
+
+export interface AdminSubscription {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  company_name: string;
+  dataset_type: "DB1" | "DB2";
+  status: "active" | "expired" | "pending" | "deactivated";
+  starts_at: string;
+  expires_at: string;
+  renewal_date: string;
+  activated_by: string;
+  payment_reference: string;
+  admin_notes: string;
+  created_at: string;
+}
 
 export interface SubscriptionActionResponse<T = any> {
   success: boolean;

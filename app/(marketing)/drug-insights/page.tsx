@@ -14,7 +14,7 @@ import { fetchDrugsAction } from "@/app/admin/drug-actions";
 
 interface Drug {
   id: string;
-  name: string;
+  drug_name: string;
   company: string;
   route: string;
   phase: string;
@@ -30,7 +30,14 @@ export default function DrugInsightsPage() {
       try {
         const result = await fetchDrugsAction();
         if (result.success && result.data) {
-          setDrugs(result.data.slice(0, 3));
+          // Map AdminDrug to Drug interface
+          setDrugs(result.data.slice(0, 3).map(drug => ({
+            id: drug.id,
+            drug_name: drug.drug_name,
+            company: drug.company,
+            route: drug.route,
+            phase: drug.phase
+          })));
         } else {
           setError(result.error || "Failed to load drugs");
         }
@@ -113,7 +120,7 @@ export default function DrugInsightsPage() {
               key={drug.id}
               className="grid grid-cols-[1.2fr_1fr_1fr_.8fr] gap-4 border-t border-line px-6 py-4 text-sm"
             >
-              <span className="font-semibold text-navy">{drug.name}</span>
+              <span className="font-semibold text-navy">{drug.drug_name}</span>
               <span className="text-muted">{drug.company}</span>
               <span className="text-muted">{drug.route}</span>
               <span className="text-muted">{drug.phase}</span>

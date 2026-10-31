@@ -1,5 +1,69 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, Search } from "lucide-react";
-import { DemoNotice, DatasetBadge } from "@/components/portal-shell";
+import { DatasetBadge } from "@/components/portal-shell";
 import { PortalShell } from "@/components/portal-shell";
-export default function PortalPage() { return <PortalShell><div className="container-shell py-10 lg:py-14"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="eyebrow">Subscriber dashboard</p><h1 className="mt-3 text-4xl font-bold text-navy">Good morning, guest.</h1><p className="mt-3 text-muted">A calm, structured view of delivery intelligence for approved customers.</p></div><Link href="/register" className="button-secondary gap-2">Request real access <ArrowRight size={15} /></Link></div><div className="mt-8"><DemoNotice /></div><div className="mt-8 grid gap-5 lg:grid-cols-2">{[{ dataset: "DB1" as const, title: "Large-volume subcutaneous", copy: "Route, dose, device, formulation, and estimated volume fields for the DB1 dataset.", href: "/portal/db1" }, { dataset: "DB2" as const, title: "Larger injectable delivery", copy: "Route, device, phase, pharmacology, indication, and therapy-area fields for DB2.", href: "/portal/db2" }].map((pack) => <div key={pack.dataset} className="rounded-[24px] border border-line bg-white p-7 shadow-card"><DatasetBadge dataset={pack.dataset} active /><h2 className="mt-7 text-2xl font-bold text-navy">{pack.title}</h2><p className="mt-3 max-w-md text-sm leading-6 text-muted">{pack.copy}</p><div className="mt-7 grid gap-3 border-t border-line pt-5 text-xs text-muted sm:grid-cols-2"><span className="flex items-center gap-2"><CalendarDays size={15} className="text-teal" /> Start date: demo only</span><span className="flex items-center gap-2"><Clock3 size={15} className="text-amber-500" /> Status: not activated</span></div><Link href={pack.href} className="button-primary mt-7 gap-2">Preview search <Search size={15} /></Link></div>)}</div></div></PortalShell>; }
+export default function PortalPage() {
+  return (
+    <PortalShell>
+      <div className="container-shell py-10 lg:py-14">
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <div>
+            <p className="eyebrow">Subscriber dashboard</p>
+            <h1 className="mt-3 text-4xl font-bold text-navy">
+              Good morning, guest.
+            </h1>
+            <p className="mt-3 text-muted">
+              A calm, structured view of delivery intelligence for approved
+              customers.
+            </p>
+          </div>
+          <Link href="/register" className="button-secondary gap-2">
+            Request real access <ArrowRight size={15} />
+          </Link>
+        </div>
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          {[
+            {
+              dataset: "DB1" as const,
+              title: "Large-volume subcutaneous",
+              copy: "Route, dose, device, formulation, and estimated volume fields for the DB1 dataset.",
+              href: "/portal/db1",
+            },
+            {
+              dataset: "DB2" as const,
+              title: "Larger injectable delivery",
+              copy: "Route, device, phase, pharmacology, indication, and therapy-area fields for DB2.",
+              href: "/portal/db2",
+            },
+          ].map((pack) => (
+            <div
+              key={pack.dataset}
+              className="rounded-[24px] border border-line bg-white p-7 shadow-card"
+            >
+              <DatasetBadge dataset={pack.dataset} active />
+              <h2 className="mt-7 text-2xl font-bold text-navy">
+                {pack.title}
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-muted">
+                {pack.copy}
+              </p>
+              <div className="mt-7 grid gap-3 border-t border-line pt-5 text-xs text-muted sm:grid-cols-2">
+                <span className="flex items-center gap-2">
+                  <CalendarDays size={15} className="text-teal" /> Start date:
+                  demo only
+                </span>
+                <span className="flex items-center gap-2">
+                  <Clock3 size={15} className="text-amber-500" /> Status: not
+                  activated
+                </span>
+              </div>
+              <Link href={pack.href} className="button-primary mt-7 gap-2">
+                Preview search <Search size={15} />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </PortalShell>
+  );
+}

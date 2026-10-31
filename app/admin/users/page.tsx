@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAdmin } from "@/components/admin/admin-context";
-import { AdminUser } from "@/lib/admin-mock-data";
+import { AdminUser } from "@/app/admin/user-actions";
 
 export default function AdminUsersPage() {
   const { users, approveUser, rejectUser } = useAdmin();

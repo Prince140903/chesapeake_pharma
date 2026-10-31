@@ -1,5 +1,17 @@
 import { createClient } from "./server";
-import { AdminUser, INITIAL_MOCK_USERS } from "@/lib/admin-mock-data";
+
+export interface AdminUser {
+  id: string;
+  full_name: string;
+  email: string;
+  company_name: string;
+  role: "admin" | "subscriber";
+  approval_status: "pending" | "approved" | "rejected";
+  requested_packs: "DB1" | "DB2" | "DB1 & DB2";
+  created_at: string;
+  last_sign_in?: string;
+  notes?: string;
+}
 
 export interface AdminAuthResult {
   isAuthenticated: boolean;
