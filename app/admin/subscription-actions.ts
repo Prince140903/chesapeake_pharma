@@ -14,8 +14,6 @@ export interface AdminSubscription {
   starts_at: string;
   expires_at: string;
   renewal_date: string;
-  activated_by: string;
-  payment_reference: string;
   admin_notes: string;
   created_at: string;
 }
@@ -87,8 +85,6 @@ export async function fetchSubscriptionsAction(): Promise<SubscriptionActionResp
         starts_at: sub.starts_at,
         expires_at: sub.expires_at,
         renewal_date: sub.renewal_date,
-        activated_by: sub.activated_by || "System",
-        payment_reference: sub.payment_reference || "",
         admin_notes: sub.admin_notes || "",
         created_at: sub.created_at
       };
@@ -129,8 +125,6 @@ export async function createSubscriptionAction(
       starts_at: subscription.starts_at,
       expires_at: subscription.expires_at,
       renewal_date: subscription.renewal_date,
-      activated_by: subscription.activated_by,
-      payment_reference: subscription.payment_reference,
       admin_notes: subscription.admin_notes,
       created_at: new Date().toISOString()
     };
@@ -169,8 +163,6 @@ export async function createSubscriptionAction(
         starts_at: data.starts_at,
         expires_at: data.expires_at,
         renewal_date: data.renewal_date,
-        activated_by: data.activated_by,
-        payment_reference: data.payment_reference,
         admin_notes: data.admin_notes,
         created_at: data.created_at
       }
@@ -235,8 +227,6 @@ export async function updateSubscriptionStatusAction(
         starts_at: data.starts_at,
         expires_at: data.expires_at,
         renewal_date: data.renewal_date,
-        activated_by: data.activated_by,
-        payment_reference: data.payment_reference,
         admin_notes: data.admin_notes,
         created_at: data.created_at
       }

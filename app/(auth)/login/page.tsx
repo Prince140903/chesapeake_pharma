@@ -62,7 +62,7 @@ export default function LoginPage() {
           // First-time login: redirect to password setup
           setMessage("Account verified! Redirecting to password setup...");
           setTimeout(() => {
-            window.location.href = "/auth/set-password";
+            window.location.href = "/set-password";
           }, 1000);
         } else {
           // Regular login: redirect to portal

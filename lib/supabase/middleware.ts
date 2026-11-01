@@ -66,7 +66,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Allow set-password page for authenticated users
-  if (pathname === "/auth/set-password") {
+  if (pathname === "/set-password") {
     if (!user) {
       // Not logged in, redirect to login
       const url = request.nextUrl.clone();
