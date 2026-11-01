@@ -15,6 +15,7 @@ export type DrugRecord = {
   frequency: string;
   pharmacology: string;
   volume?: string;
+  type?: string;
 };
 
 export const services = [

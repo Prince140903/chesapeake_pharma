@@ -36,81 +36,105 @@ export interface AccessRequest {
  * Stores the request in public.access_requests with pending status
  * Sends email notification to admin
  */
+
 export async function submitAccessRequestAction(
   requestData: AccessRequestData
 ): Promise<AccessRequestResponse> {
   try {
+    const fullName = requestData.full_name?.trim();
+    const email = requestData.email?.trim().toLowerCase();
+    const companyName = requestData.company_name?.trim();
+
+    if (!fullName || !email || !companyName) {
+      return {
+        success: false,
+        error: "Please complete all required fields.",
+      };
+    }
+
     const supabase = createClient();
+
     if (!supabase) {
       return {
         success: false,
-        error: "Database connection failed"
+        error: "Database connection failed.",
       };
     }
 
-    // Insert the access request into the database (RLS allows public insert)
-    const { data, error } = await supabase
+    // Public INSERT: only these three columns are permitted.
+    // Database defaults populate status and created_at.
+    // No SELECT because public visitors cannot read requests.
+    const { error } = await supabase
       .from("access_requests")
-      .insert([
-        {
-          full_name: requestData.full_name,
-          email: requestData.email,
-          company_name: requestData.company_name,
-          status: "pending",
-          created_at: new Date().toISOString()
-        }
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-
-    // Send email notification to admin
-    try {
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@chesapeakepharma.com";
-      
-      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || ""}/api/send-access-request-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          adminEmail,
-          requestData,
-          requestId: data.id
-        })
+      .insert({
+        full_name: fullName,
+        email,
+        company_name: companyName,
       });
 
-      if (!emailResponse.ok) {
-        console.error("Email sending failed, but request was created");
+    if (error) {
+      console.error("Access request database error:", error);
+
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    // Email notification is optional and must not affect submission.
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const adminEmail =
+        process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+        "admin@chesapeakepharma.com";
+
+      if (appUrl) {
+        const response = await fetch(
+          `${appUrl.replace(/\/$/, "")}/api/send-access-request-email`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              adminEmail,
+              requestData: {
+                full_name: fullName,
+                email,
+                company_name: companyName,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Admin notification email failed.");
+        }
       }
     } catch (emailError) {
-      console.error("Error sending email:", emailError);
-      // Don't fail the request if email fails - the record is already created
+      console.error("Email notification error:", emailError);
     }
+
+    revalidatePath("/admin/access-requests");
 
     return {
       success: true,
-      message: "Your access request has been submitted. We will review it and contact you shortly.",
-      data: {
-        id: data.id,
-        status: "pending",
-        created_at: data.created_at
-      }
+      message:
+        "Your access request has been submitted. We will review it and contact you shortly.",
     };
   } catch (error) {
-    console.error("Error submitting access request:", error);
+    console.error("Access request submission error:", error);
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error submitting request"
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unknown error submitting request.",
     };
   }
 }
+
 
 /**
  * Fetch all access requests (admin only)
@@ -363,6 +387,7 @@ export async function completeAccessApprovalAction(
 
     // 2. Generate temporary password
     const tempPassword = generateTemporaryPassword();
+    console.log("password: ", tempPassword);
 
     // 3. Create user profile in auth + profiles table using service role
     const adminClient = createAdminServiceClient();
