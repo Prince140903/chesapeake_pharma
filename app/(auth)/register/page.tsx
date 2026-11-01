@@ -10,7 +10,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    company_name: ""
+    company_name: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -19,9 +19,9 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -51,20 +51,22 @@ export default function RegisterPage() {
 
     try {
       const result = await submitAccessRequestAction(formData);
-      
+
       if (result.success) {
         setSuccess(result.message || "Request submitted successfully!");
         setSubmitted(true);
         setFormData({
           full_name: "",
           email: "",
-          company_name: ""
+          company_name: "",
         });
       } else {
         setError(result.error || "Failed to submit request. Please try again.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -76,17 +78,21 @@ export default function RegisterPage() {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
           <CheckCircle2 size={28} />
         </div>
-        
+
         <p className="eyebrow mt-8 text-center">Request Submitted</p>
         <h1 className="mt-4 text-center text-4xl font-bold text-navy">
           Thank you, {formData.full_name.split(" ")[0]}!
         </h1>
         <p className="mx-auto mt-5 max-w-lg text-center text-base leading-7 text-muted">
-          Your database access request has been submitted. Our team will review your request and contact you at <strong>{formData.email}</strong> within 1-2 business days.
+          Your database access request has been submitted. Our team will review
+          your request and contact you at <strong>{formData.email}</strong>{" "}
+          within 1-2 business days.
         </p>
 
         <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left text-sm leading-6 text-blue-900">
-          <p><strong>What happens next?</strong></p>
+          <p>
+            <strong>What happens next?</strong>
+          </p>
           <ul className="mt-2 space-y-1 list-disc list-inside">
             <li>We verify your company information</li>
             <li>An admin will assign appropriate database access</li>
@@ -107,20 +113,34 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[620px] rounded-[28px] border border-line bg-white p-8 shadow-soft sm:p-12">
+    <div className="mx-auto w-full max-w-[580px] rounded-[28px] border border-line bg-white p-8 shadow-soft sm:p-12">
       <div className="grid h-12 w-12 place-items-center rounded-2xl bg-navy text-teal">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
         </svg>
       </div>
 
       <p className="eyebrow mt-8">Chesapeake Pharma Portal</p>
-      <h1 className="mt-4 text-4xl font-bold text-navy">Request database access</h1>
-      <p className="mt-4 text-base leading-7 text-muted">
-        Access is restricted to approved customers. Submit a request and Chesapeake Pharma will review it manually. Once approved, an admin will assign you the appropriate database access.
+      <h1 className="mt-4 text-3xl font-bold text-navy">
+        Request database access
+      </h1>
+      <p className="mt-4 text-sm leading-7 text-muted">
+        Access is restricted to approved customers. Submit a request and
+        Chesapeake Pharma will review it manually. Once approved, an admin will
+        assign you the appropriate database access.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 grid gap-6">
+      <form onSubmit={handleSubmit} className="mt-8 grid gap-4">
         {error && (
           <StatusLine type="error">
             <span>{error}</span>
@@ -134,7 +154,10 @@ export default function RegisterPage() {
         )}
 
         <div>
-          <label htmlFor="full_name" className="block text-sm font-semibold text-navy mb-2">
+          <label
+            htmlFor="full_name"
+            className="block text-sm font-semibold text-navy mb-2"
+          >
             Full Name
           </label>
           <input
@@ -150,7 +173,10 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-navy mb-2">
+          <label
+            htmlFor="email"
+            className="block text-sm font-semibold text-navy mb-2"
+          >
             Corporate email
           </label>
           <input
@@ -166,7 +192,10 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="company_name" className="block text-sm font-semibold text-navy mb-2">
+          <label
+            htmlFor="company_name"
+            className="block text-sm font-semibold text-navy mb-2"
+          >
             Company / Organization
           </label>
           <input
@@ -191,7 +220,10 @@ export default function RegisterPage() {
       </form>
 
       <div className="mt-8 flex items-center justify-between border-t border-line pt-5 text-sm">
-        <Link href="/" className="inline-flex items-center gap-2 font-semibold text-muted hover:text-navy">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 font-semibold text-muted hover:text-navy"
+        >
           <ArrowLeft size={14} /> Public website
         </Link>
         <Link href="/login" className="font-semibold text-navy hover:text-teal">
@@ -201,7 +233,10 @@ export default function RegisterPage() {
 
       <div className="mt-6 flex gap-2 text-xs text-muted">
         <ShieldCheck size={15} className="shrink-0 text-teal" />
-        <span>Private data will only appear after server-side approval and an active dataset entitlement.</span>
+        <span>
+          Private data will only appear after server-side approval and an active
+          dataset entitlement.
+        </span>
       </div>
     </div>
   );

@@ -19,12 +19,12 @@ import {
 import { useAdmin } from "@/components/admin/admin-context";
 
 export default function AdminDashboardPage() {
-  const { drugs, users, subscriptions, imports, approveUser, rejectUser } = useAdmin();
+  const { drugs, accessRequests, subscriptions, imports, approveAccessRequest, rejectAccessRequest } = useAdmin();
 
   // Metrics calculations from state
   const totalDb1 = drugs.filter((d) => d.dataset_type === "DB1").length;
   const totalDb2 = drugs.filter((d) => d.dataset_type === "DB2").length;
-  const pendingUsers = users.filter((u) => u.approval_status === "pending").length;
+  const pendingRequests = accessRequests.filter((r) => r.status === "pending").length;
   const activeDb1Subs = subscriptions.filter(
     (s) => s.dataset_type === "DB1" && s.status === "active"
   ).length;
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
   }).length;
 
   const recentImports = imports.slice(0, 3);
-  const pendingRequestsList = users.filter((u) => u.approval_status === "pending").slice(0, 4);
+  const pendingRequestsList = accessRequests.filter((r) => r.status === "pending").slice(0, 4);
 
   return (
     <div className="space-y-8">
@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-[#0B2D45]">{pendingUsers}</span>
+            <span className="text-3xl font-extrabold text-[#0B2D45]">{pendingRequests}</span>
             <span className="text-[11px] font-medium text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-full">
               Needs review
             </span>
@@ -179,38 +179,55 @@ export default function AdminDashboardPage() {
               href="/admin/users"
               className="text-xs font-bold text-[#135C70] hover:text-[#42B7B9] flex items-center gap-1"
             >
-              View all ({users.length}) <ChevronRight size={14} />
+              View all requests ({accessRequests.length}) <ChevronRight size={14} />
             </Link>
           </div>
 
           <div className="mt-4 divide-y divide-[#DCE6EB]">
             {pendingRequestsList.length === 0 ? (
               <p className="py-6 text-center text-xs text-slate-400">
-                No pending customer requests at this time.
+                No pending access requests at this time.
               </p>
             ) : (
-              pendingRequestsList.map((user) => (
-                <div key={user.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              pendingRequestsList.map((request) => (
+                <div key={request.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-[#0B2D45]">{user.full_name}</span>
+                      <span className="font-bold text-xs text-[#0B2D45]">{request.full_name}</span>
                       <span className="rounded bg-[#EAF7F7] px-2 py-0.5 text-[10px] font-bold text-[#135C70]">
-                        Wants {user.requested_packs}
+                        {new Date(request.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 font-medium">{user.company_name}</p>
-                    <p className="text-[11px] text-slate-400">{user.email}</p>
+                    <p className="text-xs text-slate-600 font-medium">{request.company_name}</p>
+                    <p className="text-[11px] text-slate-400">{request.email}</p>
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => approveAccessRequest(request.id, "DB1")}
+                        className="rounded-md bg-[#135C70] px-2 py-1 text-xs font-bold text-white hover:bg-[#0B3B48] transition"
+                        title="Approve for DB1"
+                      >
+                        DB1
+                      </button>
+                      <button
+                        onClick={() => approveAccessRequest(request.id, "DB2")}
+                        className="rounded-md bg-[#135C70] px-2 py-1 text-xs font-bold text-white hover:bg-[#0B3B48] transition"
+                        title="Approve for DB2"
+                      >
+                        DB2
+                      </button>
+                      <button
+                        onClick={() => approveAccessRequest(request.id, "both")}
+                        className="rounded-md bg-[#42B7B9] px-2 py-1 text-xs font-bold text-white hover:bg-[#338A8C] transition"
+                        title="Approve for Both"
+                      >
+                        Both
+                      </button>
+                    </div>
                     <button
-                      onClick={() => approveUser(user.id)}
-                      className="rounded-md bg-[#135C70] px-2.5 py-1 text-xs font-bold text-white hover:bg-[#0B3B48] transition"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => rejectUser(user.id, "Non-qualifying commercial profile")}
+                      onClick={() => rejectAccessRequest(request.id, "Non-qualifying commercial profile")}
                       className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:border-red-300 hover:text-red-700 transition"
                     >
                       Reject

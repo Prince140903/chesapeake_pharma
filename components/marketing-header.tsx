@@ -59,6 +59,12 @@ export function MarketingHeader() {
           >
             Client Login
           </Link>
+          <Link
+            href="/register"
+            className="focus-ring text-xs font-bold text-[#135C70] hover:text-white bg-[#EBF6F8] hover:bg-[#135C70] transition px-3.5 py-1.5 rounded-md border border-[#BCE1E4]"
+          >
+            Get Access
+          </Link>
         </div>
 
         {/* Mobile Menu Trigger */}

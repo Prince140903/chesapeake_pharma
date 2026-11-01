@@ -19,53 +19,54 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAdmin } from "@/components/admin/admin-context";
-import { AdminUser } from "@/app/admin/user-actions";
+import { AccessRequest } from "@/app/admin/access-request-actions";
 
 export default function AdminUsersPage() {
-  const { users, approveUser, rejectUser } = useAdmin();
+  const { accessRequests, approveAccessRequest, rejectAccessRequest } = useAdmin();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<AccessRequest | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-  const [rejectModalUser, setRejectModalUser] = useState<AdminUser | null>(null);
+  const [rejectModalRequest, setRejectModalRequest] = useState<AccessRequest | null>(null);
+  const [selectedDatabase, setSelectedDatabase] = useState<"DB1" | "DB2" | "both">("DB1");
   const [isLoading, setIsLoading] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      if (statusFilter !== "all" && u.approval_status !== statusFilter) return false;
+  const filteredRequests = useMemo(() => {
+    return accessRequests.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
 
       if (searchQuery.trim() !== "") {
         const q = searchQuery.toLowerCase();
-        const matchName = u.full_name.toLowerCase().includes(q);
-        const matchEmail = u.email.toLowerCase().includes(q);
-        const matchCompany = u.company_name.toLowerCase().includes(q);
+        const matchName = r.full_name.toLowerCase().includes(q);
+        const matchEmail = r.email.toLowerCase().includes(q);
+        const matchCompany = r.company_name.toLowerCase().includes(q);
         if (!matchName && !matchEmail && !matchCompany) return false;
       }
 
       return true;
     });
-  }, [users, statusFilter, searchQuery]);
+  }, [accessRequests, statusFilter, searchQuery]);
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (requestId: string, database: "DB1" | "DB2" | "both") => {
     setIsLoading(true);
-    await approveUser(userId);
+    await approveAccessRequest(requestId, database);
     setIsLoading(false);
-    if (selectedUser?.id === userId) {
-      setSelectedUser((prev) => (prev ? { ...prev, approval_status: "approved" } : null));
+    if (selectedRequest?.id === requestId) {
+      setSelectedRequest((prev) => (prev ? { ...prev, status: "approved", assigned_database: database } : null));
     }
   };
 
   const handleRejectConfirm = async () => {
-    if (!rejectModalUser) return;
+    if (!rejectModalRequest) return;
     setIsLoading(true);
-    await rejectUser(rejectModalUser.id, rejectReason || "Declined during commercial verification");
+    await rejectAccessRequest(rejectModalRequest.id, rejectReason || "Declined during commercial verification");
     setIsLoading(false);
-    if (selectedUser?.id === rejectModalUser.id) {
-      setSelectedUser((prev) => (prev ? { ...prev, approval_status: "rejected" } : null));
+    if (selectedRequest?.id === rejectModalRequest.id) {
+      setSelectedRequest((prev) => (prev ? { ...prev, status: "rejected", admin_notes: rejectReason } : null));
     }
-    setRejectModalUser(null);
+    setRejectModalRequest(null);
     setRejectReason("");
   };
 
@@ -100,10 +101,10 @@ export default function AdminUsersPage() {
           <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
             {(
               [
-                { id: "all", label: "All Users", count: users.length },
-                { id: "pending", label: "Pending", count: users.filter((u) => u.approval_status === "pending").length },
-                { id: "approved", label: "Approved", count: users.filter((u) => u.approval_status === "approved").length },
-                { id: "rejected", label: "Rejected", count: users.filter((u) => u.approval_status === "rejected").length }
+                { id: "all", label: "All Requests", count: accessRequests.length },
+                { id: "pending", label: "Pending", count: accessRequests.filter((r) => r.status === "pending").length },
+                { id: "approved", label: "Approved", count: accessRequests.filter((r) => r.status === "approved").length },
+                { id: "rejected", label: "Rejected", count: accessRequests.filter((r) => r.status === "rejected").length }
               ] as const
             ).map((tab) => (
               <button
@@ -159,60 +160,47 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#DCE6EB]">
-              {filteredUsers.length === 0 ? (
+              {filteredRequests.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                    No users match the selected status or query.
+                    No requests match the selected status or query.
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-[#F5F8FA]/80 transition">
+                filteredRequests.map((request) => (
+                  <tr key={request.id} className="hover:bg-[#F5F8FA]/80 transition">
                     <td className="px-4 py-3 font-bold text-[#0B2D45]">
-                      <div className="flex items-center gap-2">
-                        <span>{user.full_name}</span>
-                        {user.role === "admin" && (
-                          <span className="rounded bg-[#0B2D45] px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
-                            ADMIN
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400">{user.id}</span>
+                      <div>{request.full_name}</div>
+                      <span className="text-[10px] font-mono text-slate-400">{request.id}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-800">{user.company_name}</div>
-                      <div className="text-[11px] text-slate-500">{user.email}</div>
+                      <div className="font-semibold text-slate-800">{request.company_name}</div>
+                      <div className="text-[11px] text-slate-500">{request.email}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          user.role === "admin"
-                            ? "bg-slate-900 text-teal-300"
-                            : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        {user.role}
+                      <span className="inline-block rounded px-2 py-0.5 text-[10px] font-bold uppercase bg-slate-100 text-slate-700">
+                        Subscriber
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-md bg-[#EAF7F7] px-2 py-0.5 text-[10px] font-bold text-[#135C70] border border-[#BCE1E4]">
-                        {user.requested_packs}
+                        Database Access
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {user.approval_status === "approved" && (
+                      {request.status === "approved" && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
                           <CheckCircle2 size={12} className="text-emerald-600" />
                           Approved
                         </span>
                       )}
-                      {user.approval_status === "pending" && (
+                      {request.status === "pending" && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
                           <Clock size={12} className="text-amber-600" />
                           Pending Review
                         </span>
                       )}
-                      {user.approval_status === "rejected" && (
+                      {request.status === "rejected" && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-800 border border-rose-200">
                           <XCircle size={12} className="text-rose-600" />
                           Rejected
@@ -220,42 +208,54 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-[11px]">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {new Date(request.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => {
-                            setSelectedUser(user);
+                            setSelectedRequest(request);
                             setIsDetailsOpen(true);
                           }}
                           className="rounded p-1 text-slate-500 hover:bg-[#EAF7F7] hover:text-[#135C70]"
-                          title="View Profile Details"
+                          title="View Request Details"
                         >
                           <Eye size={15} />
                         </button>
 
-                        {user.role !== "admin" && (
+                        {request.status === "pending" && (
                           <>
-                            {user.approval_status !== "approved" && (
-                              <button
-                                onClick={() => handleApprove(user.id)}
-                                disabled={isLoading}
-                                className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 border border-emerald-200 disabled:opacity-50"
-                              >
-                                {isLoading ? "..." : "Approve"}
-                              </button>
-                            )}
-
-                            {user.approval_status !== "rejected" && (
-                              <button
-                                onClick={() => setRejectModalUser(user)}
-                                disabled={isLoading}
-                                className="rounded bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-100 border border-rose-200 disabled:opacity-50"
-                              >
-                                Reject
-                              </button>
-                            )}
+                            <button
+                              onClick={() => handleApprove(request.id, "DB1")}
+                              disabled={isLoading}
+                              className="rounded bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-800 hover:bg-blue-100 border border-blue-200 disabled:opacity-50"
+                              title="Approve for DB1 only"
+                            >
+                              DB1
+                            </button>
+                            <button
+                              onClick={() => handleApprove(request.id, "DB2")}
+                              disabled={isLoading}
+                              className="rounded bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-800 hover:bg-blue-100 border border-blue-200 disabled:opacity-50"
+                              title="Approve for DB2 only"
+                            >
+                              DB2
+                            </button>
+                            <button
+                              onClick={() => handleApprove(request.id, "both")}
+                              disabled={isLoading}
+                              className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 border border-emerald-200 disabled:opacity-50"
+                              title="Approve for both databases"
+                            >
+                              Both
+                            </button>
+                            <button
+                              onClick={() => setRejectModalRequest(request)}
+                              disabled={isLoading}
+                              className="rounded bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-100 border border-rose-200 disabled:opacity-50"
+                            >
+                              Reject
+                            </button>
                           </>
                         )}
                       </div>
@@ -268,17 +268,17 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* User Details Modal */}
-      {isDetailsOpen && selectedUser && (
+      {/* Request Details Modal */}
+      {isDetailsOpen && selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-2xl border border-[#DCE6EB] bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between pb-4 border-b border-[#DCE6EB]">
               <div>
                 <span className="rounded bg-[#EAF7F7] px-2 py-0.5 text-[10px] font-bold text-[#135C70]">
-                  USER PROFILE #{selectedUser.id}
+                  REQUEST #{selectedRequest.id}
                 </span>
-                <h2 className="mt-1 text-xl font-bold text-[#0B2D45]">{selectedUser.full_name}</h2>
-                <p className="text-xs text-slate-500">{selectedUser.company_name}</p>
+                <h2 className="mt-1 text-xl font-bold text-[#0B2D45]">{selectedRequest.full_name}</h2>
+                <p className="text-xs text-slate-500">{selectedRequest.company_name}</p>
               </div>
               <button
                 onClick={() => setIsDetailsOpen(false)}
@@ -292,55 +292,82 @@ export default function AdminUsersPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-[#F5F8FA] p-3">
                   <p className="text-[10px] uppercase font-bold text-slate-400">Email Address</p>
-                  <p className="mt-1 font-semibold text-[#0B2D45]">{selectedUser.email}</p>
+                  <p className="mt-1 font-semibold text-[#0B2D45]">{selectedRequest.email}</p>
                 </div>
                 <div className="rounded-lg bg-[#F5F8FA] p-3">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Assigned Role</p>
-                  <p className="mt-1 font-semibold uppercase text-[#135C70]">{selectedUser.role}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Current Status</p>
+                  <p className="mt-1 font-semibold uppercase text-[#135C70]">{selectedRequest.status}</p>
                 </div>
               </div>
 
               <div className="rounded-lg bg-[#F5F8FA] p-3">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Requested Database Access</p>
+                <p className="text-[10px] uppercase font-bold text-slate-400">Submitted Date</p>
                 <p className="mt-1 font-bold text-[#0B2D45]">
-                  {selectedUser.requested_packs}
-                </p>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Customer requested access to this dataset during the self-service request form.
+                  {new Date(selectedRequest.created_at).toLocaleString()}
                 </p>
               </div>
 
-              <div className="rounded-lg bg-[#F5F8FA] p-3">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Current Status</p>
-                <p className="mt-1 font-bold capitalize text-[#0B2D45]">
-                  {selectedUser.approval_status}
-                </p>
-              </div>
+              {selectedRequest.status === "approved" && (
+                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+                  <p className="text-[10px] uppercase font-bold text-emerald-700">Approved Database(s)</p>
+                  <p className="mt-1 font-bold text-emerald-900">
+                    {selectedRequest.assigned_database?.toUpperCase()}
+                  </p>
+                  {selectedRequest.approved_at && (
+                    <p className="text-[11px] text-emerald-600 mt-1">
+                      Approved on {new Date(selectedRequest.approved_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
 
-              {selectedUser.notes && (
+              {selectedRequest.status === "rejected" && (
+                <div className="rounded-lg bg-rose-50 border border-rose-200 p-3">
+                  <p className="text-[10px] uppercase font-bold text-rose-700">Rejection Reason</p>
+                  <p className="mt-1 text-rose-900">{selectedRequest.admin_notes || "No reason provided"}</p>
+                  {selectedRequest.rejected_at && (
+                    <p className="text-[11px] text-rose-600 mt-1">
+                      Rejected on {new Date(selectedRequest.rejected_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {selectedRequest.admin_notes && selectedRequest.status !== "rejected" && (
                 <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Internal Administrator Notes</p>
-                  <p className="mt-1 text-slate-700">{selectedUser.notes}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Admin Notes</p>
+                  <p className="mt-1 text-slate-700">{selectedRequest.admin_notes}</p>
                 </div>
               )}
             </div>
 
             <div className="mt-6 flex items-center justify-between border-t border-[#DCE6EB] pt-4">
-              <Link
-                href="/admin/subscriptions"
-                className="text-xs font-bold text-[#135C70] hover:text-[#42B7B9] flex items-center gap-1"
-              >
-                Manage Subscriptions for this User <ArrowRight size={14} />
-              </Link>
+              <div></div>
 
-              {selectedUser.role !== "admin" && selectedUser.approval_status === "pending" && (
-                <button
-                  onClick={() => handleApprove(selectedUser.id)}
-                  disabled={isLoading}
-                  className="rounded-lg bg-[#135C70] px-4 py-2 text-xs font-bold text-white hover:bg-[#0B3B48] disabled:opacity-50"
-                >
-                  {isLoading ? "Approving..." : "Approve User"}
-                </button>
+              {selectedRequest.status === "pending" && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleApprove(selectedRequest.id, "DB1")}
+                    disabled={isLoading}
+                    className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Approve DB1
+                  </button>
+                  <button
+                    onClick={() => handleApprove(selectedRequest.id, "DB2")}
+                    disabled={isLoading}
+                    className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Approve DB2
+                  </button>
+                  <button
+                    onClick={() => handleApprove(selectedRequest.id, "both")}
+                    disabled={isLoading}
+                    className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    Approve Both
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -348,15 +375,15 @@ export default function AdminUsersPage() {
       )}
 
       {/* Reject Modal */}
-      {rejectModalUser && (
+      {rejectModalRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 shadow-2xl">
             <h3 className="text-base font-bold text-red-950">
-              Reject Registration Request
+              Reject Access Request
             </h3>
             <p className="mt-2 text-xs text-slate-600">
-              Reject access request for <strong>{rejectModalUser.full_name}</strong> (
-              {rejectModalUser.company_name}).
+              Reject access request for <strong>{rejectModalRequest.full_name}</strong> (
+              {rejectModalRequest.company_name}). User will be notified via email.
             </p>
 
             <div className="mt-4">
@@ -374,7 +401,7 @@ export default function AdminUsersPage() {
 
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
-                onClick={() => setRejectModalUser(null)}
+                onClick={() => setRejectModalRequest(null)}
                 disabled={isLoading}
                 className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >

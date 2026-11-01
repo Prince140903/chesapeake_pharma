@@ -5,6 +5,7 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { AdminDrug } from "@/app/admin/drug-actions";
 import { AdminUser } from "@/app/admin/user-actions";
 import { AdminSubscription } from "@/app/admin/subscription-actions";
+import { AccessRequest } from "@/app/admin/access-request-actions";
 import {
   fetchDrugsAction,
   createDrugAction,
@@ -21,6 +22,11 @@ import {
   createSubscriptionAction,
   updateSubscriptionStatusAction
 } from "@/app/admin/subscription-actions";
+import {
+  fetchAccessRequestsAction,
+  completeAccessApprovalAction,
+  rejectAccessRequestAction
+} from "@/app/admin/access-request-actions";
 
 export interface AdminImportJob {
   id: string;
@@ -58,6 +64,7 @@ interface AdminContextType {
   users: AdminUser[];
   subscriptions: AdminSubscription[];
   imports: AdminImportJob[];
+  accessRequests: AccessRequest[];
 
   // Drug actions
   addDrug: (drug: Omit<AdminDrug, "id" | "created_at" | "updated_at">) => Promise<void>;
@@ -67,6 +74,10 @@ interface AdminContextType {
   // User actions
   approveUser: (id: string, notes?: string) => Promise<void>;
   rejectUser: (id: string, reason?: string) => Promise<void>;
+
+  // Access request actions
+  approveAccessRequest: (requestId: string, database: "DB1" | "DB2" | "both") => Promise<void>;
+  rejectAccessRequest: (requestId: string, reason: string) => Promise<void>;
 
   // Subscription actions
   addSubscription: (sub: Omit<AdminSubscription, "id" | "created_at">) => Promise<void>;
@@ -90,6 +101,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([]);
   const [imports, setImports] = useState<AdminImportJob[]>([]);
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
@@ -123,11 +135,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             created_at: new Date().toISOString()
           });
 
-          // Fetch drugs, users, and subscriptions from database
-          const [drugsResponse, usersResponse, subscriptionsResponse] = await Promise.all([
+          // Fetch drugs, users, subscriptions, and access requests from database
+          const [drugsResponse, usersResponse, subscriptionsResponse, accessRequestsResponse] = await Promise.all([
             fetchDrugsAction(),
             fetchUsersAction(),
-            fetchSubscriptionsAction()
+            fetchSubscriptionsAction(),
+            fetchAccessRequestsAction()
           ]);
 
           if (drugsResponse.success && drugsResponse.data) {
@@ -138,6 +151,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           }
           if (subscriptionsResponse.success && subscriptionsResponse.data) {
             setSubscriptions(subscriptionsResponse.data);
+          }
+          if (accessRequestsResponse.success && accessRequestsResponse.data) {
+            setAccessRequests(accessRequestsResponse.data);
           }
         }
       } catch (error) {
@@ -445,6 +461,66 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const approveAccessRequest = async (requestId: string, database: "DB1" | "DB2" | "both") => {
+    try {
+      if (isSupabaseConfigured()) {
+        const response = await completeAccessApprovalAction(requestId, database);
+        if (response.success) {
+          setAccessRequests((prev) =>
+            prev.map((r) => (r.id === requestId ? { ...r, status: "approved", assigned_database: database } : r))
+          );
+          addToast({
+            type: "success",
+            title: "Access Request Approved",
+            message: `User has been approved for ${database}. Welcome email sent with credentials.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error",
+            message: response.error || "Failed to approve request"
+          });
+        }
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  };
+
+  const rejectAccessRequest = async (requestId: string, reason: string) => {
+    try {
+      if (isSupabaseConfigured()) {
+        const response = await rejectAccessRequestAction(requestId, reason);
+        if (response.success) {
+          setAccessRequests((prev) =>
+            prev.map((r) => (r.id === requestId ? { ...r, status: "rejected", admin_notes: reason } : r))
+          );
+          addToast({
+            type: "warning",
+            title: "Access Request Rejected",
+            message: `Request rejected and user notified via email.`
+          });
+        } else {
+          addToast({
+            type: "error",
+            title: "Error",
+            message: response.error || "Failed to reject request"
+          });
+        }
+      }
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  };
+
   const addSubscription = async (sub: Omit<AdminSubscription, "id" | "created_at">) => {
     try {
       if (isSupabaseConfigured()) {
@@ -556,11 +632,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         users,
         subscriptions,
         imports,
+        accessRequests,
         addDrug,
         updateDrug,
         deleteDrug,
         approveUser,
         rejectUser,
+        approveAccessRequest,
+        rejectAccessRequest,
         addSubscription,
         toggleSubscriptionStatus,
         addImportJob,
