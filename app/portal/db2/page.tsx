@@ -2,14 +2,14 @@ import Link from "next/link";
 import { ArrowLeft, Search } from "lucide-react";
 import { DatasetBadge, PortalShell } from "@/components/portal-shell";
 import { DrugRecord } from "@/lib/data";
-import { fetchDrugsAction } from "@/app/admin/drug-actions";
+import { fetchPortalDrugsAction } from "@/app/admin/drug-actions";
 
 export default async function DB2Page() {
   let records: DrugRecord[] = [];
   let error: string | null = null;
 
   try {
-    const result = await fetchDrugsAction();
+    const result = await fetchPortalDrugsAction();
     if (result.success && result.data) {
       // Map AdminDrug to DrugRecord and filter by DB2
       records = result.data

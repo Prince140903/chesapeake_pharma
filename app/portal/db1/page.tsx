@@ -13,7 +13,7 @@ import {
   PortalShell,
 } from "@/components/portal-shell";
 import { DrugRecord } from "@/lib/data";
-import { fetchDrugsAction } from "@/app/admin/drug-actions";
+import { fetchPortalDrugsAction } from "@/app/admin/drug-actions";
 
 export default function DB1Page() {
   const [query, setQuery] = useState("");
@@ -23,7 +23,7 @@ export default function DB1Page() {
   useEffect(() => {
     const loadRecords = async () => {
       try {
-        const result = await fetchDrugsAction();
+        const result = await fetchPortalDrugsAction();
         if (result.success && result.data) {
           // Map AdminDrug to DrugRecord and filter by DB1
           const mapped = result.data

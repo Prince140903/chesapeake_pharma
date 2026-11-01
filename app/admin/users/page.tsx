@@ -15,11 +15,15 @@ import {
   Calendar,
   Layers,
   ArrowRight,
-  X
+  X,
+  Key,
+  Copy,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 import { useAdmin } from "@/components/admin/admin-context";
 import { AccessRequest } from "@/app/admin/access-request-actions";
+import { generateResetPasswordAction } from "@/app/admin/password-actions";
 
 export default function AdminUsersPage() {
   const { accessRequests, approveAccessRequest, rejectAccessRequest } = useAdmin();
@@ -32,6 +36,10 @@ export default function AdminUsersPage() {
   const [rejectModalRequest, setRejectModalRequest] = useState<AccessRequest | null>(null);
   const [selectedDatabase, setSelectedDatabase] = useState<"DB1" | "DB2" | "both">("DB1");
   const [isLoading, setIsLoading] = useState(false);
+  const [resetPasswordModal, setResetPasswordModal] = useState<AccessRequest | null>(null);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [passwordCopied, setPasswordCopied] = useState(false);
+  const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
 
   const filteredRequests = useMemo(() => {
     return accessRequests.filter((r) => {
@@ -68,6 +76,33 @@ export default function AdminUsersPage() {
     }
     setRejectModalRequest(null);
     setRejectReason("");
+  };
+
+  const handleGenerateResetPassword = async (userId: string) => {
+    setPasswordResetError(null);
+    setGeneratedPassword(null);
+    setIsLoading(true);
+
+    try {
+      const result = await generateResetPasswordAction(userId);
+      if (result.success && result.data?.tempPassword) {
+        setGeneratedPassword(result.data.tempPassword);
+      } else {
+        setPasswordResetError(result.error || "Failed to generate password");
+      }
+    } catch (err) {
+      setPasswordResetError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyPassword = () => {
+    if (generatedPassword) {
+      navigator.clipboard.writeText(generatedPassword);
+      setPasswordCopied(true);
+      setTimeout(() => setPasswordCopied(false), 2000);
+    }
   };
 
   return (
@@ -222,6 +257,20 @@ export default function AdminUsersPage() {
                         >
                           <Eye size={15} />
                         </button>
+
+                        {request.status === "approved" && (
+                          <button
+                            onClick={() => {
+                              setResetPasswordModal(request);
+                              setGeneratedPassword(null);
+                              setPasswordResetError(null);
+                            }}
+                            className="rounded p-1 text-slate-500 hover:bg-amber-50 hover:text-amber-700"
+                            title="Reset User Password"
+                          >
+                            <Key size={15} />
+                          </button>
+                        )}
 
                         {request.status === "pending" && (
                           <>
@@ -414,6 +463,94 @@ export default function AdminUsersPage() {
               >
                 {isLoading ? "Rejecting..." : "Confirm Rejection"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {resetPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-amber-100 p-2">
+                <Key size={18} className="text-amber-700" />
+              </div>
+              <div>
+                <h3 className="font-bold text-amber-900">Reset User Password</h3>
+                <p className="text-xs text-slate-500">{resetPasswordModal.full_name}</p>
+              </div>
+            </div>
+
+            {passwordResetError && (
+              <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3">
+                <p className="text-xs text-red-800">{passwordResetError}</p>
+              </div>
+            )}
+
+            {generatedPassword ? (
+              <div className="mt-4 space-y-3">
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+                  <p className="text-xs font-bold text-amber-900 mb-2">Temporary Password Generated</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 rounded bg-white px-3 py-2 font-mono text-sm font-bold text-[#0B2D45] break-all">
+                      {generatedPassword}
+                    </code>
+                    <button
+                      onClick={handleCopyPassword}
+                      className={`rounded-lg p-2 transition ${
+                        passwordCopied
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                      }`}
+                      title="Copy to clipboard"
+                    >
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                  {passwordCopied && (
+                    <p className="mt-2 text-xs text-emerald-700 font-semibold">✓ Copied to clipboard</p>
+                  )}
+                </div>
+
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+                  <p className="text-xs font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    Important
+                  </p>
+                  <ul className="text-xs text-blue-800 space-y-1 list-disc list-inside">
+                    <li>Share this password securely with the user</li>
+                    <li>User must change it on their first login</li>
+                    <li>This password will not be shown again</li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-4 text-xs text-slate-600">
+                Generate a temporary password that the user can use to log in. They will be required to set their own password on first login.
+              </p>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setResetPasswordModal(null);
+                  setGeneratedPassword(null);
+                  setPasswordResetError(null);
+                }}
+                className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                {generatedPassword ? "Done" : "Cancel"}
+              </button>
+              {!generatedPassword && (
+                <button
+                  onClick={() => handleGenerateResetPassword(resetPasswordModal.id)}
+                  disabled={isLoading}
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {isLoading ? "Generating..." : "Generate Password"}
+                </button>
+              )}
             </div>
           </div>
         </div>

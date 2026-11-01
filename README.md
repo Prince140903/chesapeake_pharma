@@ -28,3 +28,28 @@ pnpm build
 ```
 
 The app uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide icons, React Hook Form/Zod dependencies, and a typed repository boundary ready for the Supabase implementation.
+
+
+I found a bug in website. Where client login is getting overlapped by admin loggin.
+
+ 
+
+Why this occured? i will tell u what i was doing. 
+
+ 
+
+I opened localhost/portal on one tab and on other tab localhost/admin on same browser. 
+
+this might be the reason but still it shouldnt overlap.
+
+ 
+
+Where did i found bug. The admin was already logged in because of it persist it, but on client login i logged using client creds it worked but the drug data was coming because of admin login, as i log out of admin it gave me no data found for drugs. 
+
+ 
+
+this indicates that - 
+
+- drugs data can only being fetched by admin
+
+- client page is getting overlapped by admin auths

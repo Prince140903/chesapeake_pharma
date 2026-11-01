@@ -533,3 +533,136 @@ export async function deleteReferenceAction(referenceId: string): Promise<DrugAc
     };
   }
 }
+
+/**
+ * Fetch drugs for authenticated subscriber portal users.
+ * 
+ * This action performs server-side authentication and authorization:
+ * 1. Verifies the user is authenticated
+ * 2. Checks the user has a subscriber profile with approved status
+ * 3. Queries the user's active subscriptions to determine dataset access (DB1 and/or DB2)
+ * 4. Returns only drugs from datasets the user is subscribed to
+ * 
+ * Used exclusively by portal pages (/portal, /portal/db1, /portal/db2)
+ * Admin panel uses the regular fetchDrugsAction() instead.
+ */
+export async function fetchPortalDrugsAction(): Promise<DrugActionResponse<AdminDrug[]>> {
+  try {
+    const supabase = createClient();
+    if (!supabase) {
+      return {
+        success: false,
+        error: "Supabase not configured"
+      };
+    }
+
+    // 1. Get authenticated user from Supabase Auth
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return {
+        success: false,
+        error: "Unauthenticated: Please log in to access the drug database."
+      };
+    }
+
+    // 2. Verify user has an approved subscriber profile
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, approval_status")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return {
+        success: false,
+        error: "Profile not found. Please contact support."
+      };
+    }
+
+    // 3. Ensure user is a subscriber with approved status
+    if (profile.role !== "subscriber") {
+      return {
+        success: false,
+        error: "Unauthorized: Only approved subscribers can access the drug database."
+      };
+    }
+
+    if (profile.approval_status !== "approved") {
+      return {
+        success: false,
+        error: `Access denied: Your account status is '${profile.approval_status}'. Only approved accounts can view drug records.`
+      };
+    }
+
+    // 4. Fetch user's active subscriptions to determine dataset access
+    const { data: subscriptions, error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .select("dataset_type, status, expires_at")
+      .eq("user_id", user.id);
+
+    if (subscriptionError || !subscriptions) {
+      return {
+        success: false,
+        error: "Unable to retrieve your subscription information."
+      };
+    }
+
+    // 5. Filter subscriptions to only active ones that haven't expired
+    const now = new Date().toISOString();
+    const activeSubscriptions = subscriptions.filter(sub => {
+      const isActive = sub.status === "active";
+      const notExpired = !sub.expires_at || sub.expires_at > now;
+      return isActive && notExpired;
+    });
+
+    if (activeSubscriptions.length === 0) {
+      return {
+        success: false,
+        error: "No active subscriptions found. Please contact support or renew your subscription."
+      };
+    }
+
+    // 6. Extract the list of datasets the user has access to (deduplicated)
+    const datasetSet = new Set<string>();
+    activeSubscriptions.forEach(sub => {
+      datasetSet.add(sub.dataset_type);
+    });
+    const allowedDatasets = Array.from(datasetSet);
+
+    // 7. Fetch drugs belonging only to the user's authorized datasets
+    const { data, error } = await supabase
+      .from("drugs")
+      .select("*")
+      .in("dataset_type", allowedDatasets)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+
+    // 8. Map database records to AdminDrug format
+    const drugs = (data || []).map((drug: any) => ({
+      ...drug,
+      route: drug.route,
+      references: []
+    }));
+
+    return {
+      success: true,
+      data: drugs
+    };
+  } catch (error) {
+    console.error("Error fetching portal drugs:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error fetching drugs"
+    };
+  }
+}

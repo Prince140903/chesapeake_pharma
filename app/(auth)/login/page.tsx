@@ -51,11 +51,26 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        setMessage("Successfully signed in! Redirecting...");
-        // Redirect to portal
-        setTimeout(() => {
-          window.location.href = "/portal";
-        }, 1000);
+        // Check if user has set their password (only for first-time login)
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("password_changed")
+          .eq("id", data.user.id)
+          .single();
+
+        if (!profileData?.password_changed) {
+          // First-time login: redirect to password setup
+          setMessage("Account verified! Redirecting to password setup...");
+          setTimeout(() => {
+            window.location.href = "/auth/set-password";
+          }, 1000);
+        } else {
+          // Regular login: redirect to portal
+          setMessage("Successfully signed in! Redirecting...");
+          setTimeout(() => {
+            window.location.href = "/portal";
+          }, 1000);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");

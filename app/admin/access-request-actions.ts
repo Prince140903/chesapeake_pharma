@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminServiceClient } from "@/lib/supabase/service-role";
@@ -334,19 +335,38 @@ export async function rejectAccessRequestAction(
 }
 
 /**
- * Generate a temporary password for new user
+ * Generate a cryptographically secure temporary password
+ * Uses randomBytes instead of Math.random() for cryptographic strength
  */
 function generateTemporaryPassword(): string {
-  return Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-6);
+  // Generate 32 random bytes for a 43-character base64 string (or ~32 chars after filtering)
+  const randomBuffer = randomBytes(32);
+  const base64 = randomBuffer.toString("base64");
+  
+  // Replace non-alphanumeric characters to ensure compatibility
+  // This maintains ~256-bit entropy
+  const filtered = base64
+    .replace(/\+/g, "0")
+    .replace(/\//g, "1")
+    .replace(/=/g, "");
+  
+  return filtered;
 }
 
 /**
  * Complete access request approval workflow (admin only):
- * 1. Create user in profiles table
- * 2. Create subscription record
- * 3. Update access request status
- * 4. Send welcome email with credentials
- * 5. Mark request as approved
+ * 1. Fetch access request
+ * 2. Create or retrieve user in Supabase Auth
+ * 3. Create profile record in profiles table
+ * 4. Create subscription records (preventing duplicates)
+ * 5. Update access request status
+ * 6. Send approval email with secure recovery link
+ *
+ * Supports safe retries: if any step fails, retry will recover existing Auth user
+ * and create missing profile/subscriptions without duplicating data.
+ *
+ * Uses service-role client for all database writes to bypass RLS policies.
+ * Admin authorization is verified at entry point.
  */
 export async function completeAccessApprovalAction(
   requestId: string,
@@ -363,6 +383,16 @@ export async function completeAccessApprovalAction(
       };
     }
 
+    // Initialize service-role client for all privileged operations
+    const adminClient = createAdminServiceClient();
+    if (!adminClient) {
+      return {
+        success: false,
+        error: "Admin client not configured"
+      };
+    }
+
+    // Use regular client for fetching the access request (safe, read-only)
     const supabase = createClient();
     if (!supabase) {
       return {
@@ -371,7 +401,7 @@ export async function completeAccessApprovalAction(
       };
     }
 
-    // 1. Get the access request
+    // 1. Fetch the access request
     const { data: accessRequest, error: fetchError } = await supabase
       .from("access_requests")
       .select("*")
@@ -385,18 +415,15 @@ export async function completeAccessApprovalAction(
       };
     }
 
-    // 2. Generate temporary password
+    // 2. Generate temporary password (cryptographically secure)
     const tempPassword = generateTemporaryPassword();
+
+    //this is just till the emailjs setup completes.
     console.log("password: ", tempPassword);
 
-    // 3. Create user profile in auth + profiles table using service role
-    const adminClient = createAdminServiceClient();
-    if (!adminClient) {
-      return {
-        success: false,
-        error: "Admin client not configured"
-      };
-    }
+    // 3. Create or retrieve user in Supabase Auth
+    // This step determines userId which is used for profile/subscriptions
+    let userId: string | null = null;
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: accessRequest.email,
@@ -409,44 +436,103 @@ export async function completeAccessApprovalAction(
     });
 
     if (authError) {
-      // Check if user already exists
+      // User already exists in Auth (or other error)
       if (authError.message.includes("already registered")) {
-        console.warn(`User ${accessRequest.email} already exists`);
+        // RELIABLE lookup: Query the profiles table by email to get the existing user ID
+        // This works even if profile creation failed on first attempt (retry recovery)
+        // We can rely on the email being in user_metadata from the Auth user
+        const { data: users, error: listError } = await adminClient.auth.admin.listUsers();
+
+        if (listError || !users?.users) {
+          return {
+            success: false,
+            error: `Could not retrieve Auth users to find ${accessRequest.email}`
+          };
+        }
+
+        // Find the user by email
+        const existingAuthUser = users.users.find(u => u.email === accessRequest.email);
+        
+        if (!existingAuthUser) {
+          return {
+            success: false,
+            error: `User already registered but not found in Auth user list for ${accessRequest.email}`
+          };
+        }
+
+        userId = existingAuthUser.id;
+        console.warn(
+          `User ${accessRequest.email} already exists in Auth. ` +
+          `Continuing with existing ID: ${userId} (retry recovery or manual re-approval)`
+        );
       } else {
         return {
           success: false,
           error: `Failed to create user: ${authError.message}`
         };
       }
+    } else if (authData?.user?.id) {
+      userId = authData.user.id;
+    } else {
+      return {
+        success: false,
+        error: "User creation succeeded but no user ID returned"
+      };
     }
 
-    const userId = authData?.user?.id || requestId;
+    // 4. Create profile record using service-role client
+    const profileData = {
+      id: userId,
+      full_name: accessRequest.full_name,
+      company_name: accessRequest.company_name,
+      role: "subscriber",
+      approval_status: "approved",
+      password_changed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-    // 4. Create profile record
-    const { error: profileError } = await supabase
+    const { error: profileError } = await adminClient
       .from("profiles")
-      .upsert({
-        id: userId,
-        full_name: accessRequest.full_name,
-        company_name: accessRequest.company_name,
-        role: "subscriber",
-        approval_status: "approved",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      .upsert(profileData);
 
     if (profileError) {
-      console.error("Profile creation error:", profileError);
+      return {
+        success: false,
+        error: `Failed to create profile: ${profileError.message}`
+      };
     }
 
-    // 5. Create subscription record for each assigned database
+    // 5. Create subscription records, preventing duplicates on retry
+    // First, check for existing active subscriptions to prevent duplicates
+    const { data: existingSubscriptions, error: subCheckError } = await adminClient
+      .from("subscriptions")
+      .select("dataset_type, status")
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    if (subCheckError) {
+      return {
+        success: false,
+        error: `Failed to check existing subscriptions: ${subCheckError.message}`
+      };
+    }
+
+    // Determine which subscriptions need to be created
+    const existingTypes = new Set(
+      (existingSubscriptions || [])
+        .filter(s => s.status === "active")
+        .map(s => s.dataset_type)
+    );
+
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + subscriptionDuration);
 
-    const subscriptions = [];
-    if (assignedDatabase === "DB1" || assignedDatabase === "both") {
-      subscriptions.push({
+    const subscriptionsToCreate = [];
+
+    if ((assignedDatabase === "DB1" || assignedDatabase === "both") && !existingTypes.has("DB1")) {
+      subscriptionsToCreate.push({
         user_id: userId,
         dataset_type: "DB1",
         status: "active",
@@ -455,8 +541,9 @@ export async function completeAccessApprovalAction(
         created_at: new Date().toISOString()
       });
     }
-    if (assignedDatabase === "DB2" || assignedDatabase === "both") {
-      subscriptions.push({
+
+    if ((assignedDatabase === "DB2" || assignedDatabase === "both") && !existingTypes.has("DB2")) {
+      subscriptionsToCreate.push({
         user_id: userId,
         dataset_type: "DB2",
         status: "active",
@@ -466,16 +553,22 @@ export async function completeAccessApprovalAction(
       });
     }
 
-    const { error: subscriptionError } = await supabase
-      .from("subscriptions")
-      .insert(subscriptions);
+    // Only insert subscriptions if there are new ones to create
+    if (subscriptionsToCreate.length > 0) {
+      const { error: subscriptionError } = await adminClient
+        .from("subscriptions")
+        .insert(subscriptionsToCreate);
 
-    if (subscriptionError) {
-      console.error("Subscription creation error:", subscriptionError);
+      if (subscriptionError) {
+        return {
+          success: false,
+          error: `Failed to create subscriptions: ${subscriptionError.message}`
+        };
+      }
     }
 
-    // 6. Update access request status
-    const { error: updateError } = await supabase
+    // 6. Update access request status to approved
+    const { error: updateError } = await adminClient
       .from("access_requests")
       .update({
         status: "approved",
@@ -485,10 +578,40 @@ export async function completeAccessApprovalAction(
       .eq("id", requestId);
 
     if (updateError) {
-      console.error("Update error:", updateError);
+      return {
+        success: false,
+        error: `Failed to update access request: ${updateError.message}`
+      };
     }
 
-    // 7. Send welcome email with credentials
+    // 7. Generate secure recovery link for password setup
+    // This replaces sending plaintext passwords via email
+    let recoveryLink: string | null = null;
+    let recoveryLinkError: string | null = null;
+
+    try {
+      const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: "recovery",
+        email: accessRequest.email,
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password`
+        }
+      });
+
+      if (linkError) {
+        recoveryLinkError = `Could not generate recovery link: ${linkError.message}`;
+        console.error(recoveryLinkError);
+      } else if (linkData?.properties?.action_link) {
+        recoveryLink = linkData.properties.action_link;
+      }
+    } catch (err) {
+      recoveryLinkError = `Error generating recovery link: ${err instanceof Error ? err.message : "Unknown error"}`;
+      console.error(recoveryLinkError);
+      // Continue anyway; we'll send email with fallback info
+    }
+
+    // 8. Send approval email with recovery link (best-effort)
+    // If recovery link generation failed, admin can manually reset password
     try {
       const loginLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`;
       
@@ -499,7 +622,9 @@ export async function completeAccessApprovalAction(
           type: "approval",
           email: accessRequest.email,
           fullName: accessRequest.full_name,
-          password: tempPassword,
+          // Don't send plaintext password
+          // Instead send recovery link for secure password setup
+          recoveryLink: recoveryLink,
           databases: assignedDatabase,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
@@ -507,22 +632,25 @@ export async function completeAccessApprovalAction(
         })
       });
     } catch (emailError) {
-      console.error("Error sending welcome email:", emailError);
+      console.error("Error sending approval email:", emailError);
       // Don't fail the whole process if email fails
+      // Admin can view the user and reset password manually if needed
     }
 
     revalidatePath("/admin/users");
 
     return {
       success: true,
-      message: "Access request approved, user created, and credentials sent",
+      message: "Access request approved, user created, and approval email sent",
       data: {
         requestId: requestId,
         userId: userId,
         email: accessRequest.email,
         status: "approved",
         assignedDatabase: assignedDatabase,
-        subscriptionEndDate: endDate.toISOString()
+        subscriptionEndDate: endDate.toISOString(),
+        recoveryLinkGenerated: !!recoveryLink,
+        recoveryLinkError: recoveryLinkError
       }
     };
   } catch (error) {

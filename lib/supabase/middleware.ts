@@ -65,6 +65,18 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Allow set-password page for authenticated users
+  if (pathname === "/auth/set-password") {
+    if (!user) {
+      // Not logged in, redirect to login
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    // Logged-in user accessing set-password, allow it
+    return response;
+  }
+
   // Skip middleware check for the unauthorized page itself
   if (pathname === "/admin/unauthorized") {
     return response;

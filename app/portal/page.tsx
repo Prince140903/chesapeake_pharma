@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronDown, Download, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { PortalShell } from "@/components/portal-shell";
 import { type DrugRecord } from "@/lib/data";
-import { fetchDrugsAction } from "@/app/admin/drug-actions";
+import { fetchPortalDrugsAction } from "@/app/admin/drug-actions";
 import { DrugDetailModal } from "@/components/drug-detail-modal";
 
 type FilterState = {
@@ -51,7 +51,7 @@ export default function PortalPage() {
     const loadDrugs = async () => {
       try {
         setLoading(true);
-        const result = await fetchDrugsAction();
+        const result = await fetchPortalDrugsAction();
         if (result.success && result.data) {
           const mapped = result.data.map((drug) => ({
             id: drug.id,
