@@ -15,27 +15,41 @@ export default function HomePage() {
   return (
     <div className="w-full bg-[#F5F8FA] pb-16 pt-6 sm:pt-8 lg:pt-10 space-y-12 sm:space-y-16 lg:space-y-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 lg:space-y-20">
-
         {/* ========================================================
-            1. HERO SECTION
+            1. HERO SECTION - Full Image with Text Overlay
            ======================================================== */}
         <section
           aria-label="Chesapeake Pharma Overview"
-          className="rounded-2xl lg:rounded-3xl overflow-hidden border border-[#CDE5E7] bg-white shadow-[0_12px_40px_rgba(11,45,69,0.06)]"
+          className="rounded-2xl lg:rounded-3xl overflow-hidden border border-[#CDE5E7] shadow-[0_12px_40px_rgba(11,45,69,0.06)]"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[380px] xl:min-h-[420px]">
-            {/* Left Content Side */}
-            <div className="lg:col-span-7 p-7 sm:p-10 xl:p-14 flex flex-col justify-between bg-gradient-to-br from-[#EBF6F8] via-[#E2F3F5] to-[#D5EEF2]">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-[#289CA0]/30 text-[#07546A] text-[11px] font-bold uppercase tracking-widest shadow-xs mb-5">
-                  <span className="w-2 h-2 rounded-full bg-[#289CA0] animate-pulse" />
+          <div className="relative w-full min-h-[420px] sm:min-h-[480px] xl:min-h-[540px] overflow-hidden">
+            {/* Background Image */}
+            <Image
+              src="/assets/banner.png"
+              alt="Dr. Philip Green in biotechnology consulting laboratory"
+              fill
+              priority
+              sizes="100vw"
+              className="object-contain object-center"
+            />
+
+            {/* Gradient Overlay - Blue on left, fades to transparent on right */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0B2D45]/85 via-[#0B2D45]/55 to-transparent" />
+
+            {/* Text Content - Positioned on top */}
+            <div className="absolute inset-0 flex flex-col justify-between p-7 sm:p-10 xl:p-14">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/30 text-white text-[11px] font-bold uppercase tracking-widest shadow-xs mb-5 backdrop-blur-sm">
+                  <span className="w-2 h-2 rounded-full bg-[#62D4DB] animate-pulse" />
                   Drug Delivery Advisory
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl xl:text-[38px] font-extrabold uppercase leading-[1.18] tracking-tight text-[#0B2D45]">
+                <h1 className="text-2xl sm:text-3xl xl:text-[38px] font-extrabold uppercase leading-[1.18] tracking-tight text-white">
                   CHESAPEAKE PHARMA:
                   <br />
-                  <span className="text-[#135C70]">DELIVERING STRATEGIC DRUG</span>
+                  <span className="text-[#62D4DB]">
+                    DELIVERING STRATEGIC DRUG
+                  </span>
                   <br />
                   INSIGHTS & DELIVERY
                   <br />
@@ -44,47 +58,94 @@ export default function HomePage() {
                   COMMERCIALIZATION
                 </h1>
 
-                <p className="mt-5 text-sm sm:text-base leading-relaxed text-[#3D5668] max-w-xl font-normal">
-                  Expert guidance on combination products, novel injectables, and IV-to-subcutaneous
-                  transitions to derisk pharmaceutical pipeline investments.
+                <p className="mt-5 text-sm sm:text-base leading-relaxed text-white/90 max-w-xl font-normal">
+                  Expert guidance on combination products, novel injectables,
+                  and IV-to-subcutaneous transitions to derisk pharmaceutical
+                  pipeline investments.
                 </p>
               </div>
 
-              <div className="pt-8 sm:pt-10 flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Link
                   href="/contact"
                   className="focus-ring inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-6 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] group"
                 >
                   <span>SCHEDULE A CONSULTATION</span>
-                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
 
                 <Link
                   href="/services"
-                  className="focus-ring inline-flex items-center justify-center rounded-lg bg-white/80 hover:bg-white border border-[#B8DCDE] px-5 py-3.5 text-xs sm:text-sm font-semibold text-[#0B2D45] transition-all hover:border-[#135C70]"
+                  className="focus-ring inline-flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 border border-white/40 backdrop-blur-sm px-5 py-3.5 text-xs sm:text-sm font-semibold text-white transition-all hover:border-white/60"
                 >
                   Explore Key Services
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Right Photo Side */}
-            <div className="lg:col-span-5 relative min-h-[300px] lg:min-h-full bg-[#E2F0F2] overflow-hidden">
+        {/* ========================================================
+            2. STRATEGIC LEADERSHIP SECTION - Image Left, Content Right
+           ======================================================== */}
+        <section
+          aria-label="Strategic Leadership & Experience"
+          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-0 overflow-hidden shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px] sm:min-h-[550px]">
+            {/* Left Side - Image */}
+            <div className="relative bg-gradient-to-b from-[#EBF6F8] to-[#D5EEF2] min-h-[350px] lg:min-h-full flex items-center justify-center p-6 sm:p-8 order-2 lg:order-1">
               <Image
-                src="/assets/MDS-white.png"
-                alt="Dr. Philip Green in biotechnology consulting laboratory"
+                src="/assets/Picture1.png"
+                alt="Advancing drug delivery and biologics commercialization"
                 fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover object-center transition-transform duration-700 hover:scale-105"
+                sizes=""
+                className="object-contain object-center w-[50%]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/30 via-transparent to-transparent lg:hidden" />
+            </div>
+
+            {/* Right Side - Content */}
+            <div className="p-7 sm:p-10 xl:p-14 flex flex-col justify-between bg-white order-1 lg:order-2">
+              {/* Header */}
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0B2D45] tracking-tight mb-4">
+                  Advancing Drug Delivery & Biologics Commercialization
+                </h2>
+                <p className="text-sm sm:text-base text-[#476375] font-medium leading-relaxed mb-6">
+                  Strategic guidance for novel drug-device combination products,
+                  injectables, and portfolio evolution
+                </p>
+
+                {/* Main Description */}
+                <div className="space-y-4 text-sm sm:text-[15px] leading-relaxed text-[#3D5668]">
+                  <p>
+                    With over three decades of leadership across global pharma
+                    and medical technology—including executive roles at Merck,
+                    Becton-Dickinson, and Novartis—Chesapeake Pharma under the
+                    leadership of Phil provides high-impact commercial and
+                    strategic advisory services to pharmaceutical innovators and
+                    drug delivery developers.
+                  </p>
+                  <p>
+                    Backed by a doctoral foundation in pharmaceutical chemistry,
+                    he specializes in translating complex drug-device
+                    technologies into viable market leaders, offering deep
+                    expertise in combination product positioning, competitive
+                    intelligence, and IV-to-subcutaneous formulation transitions
+                    that optimize emerging pipelines and elevate patient-centric
+                    care.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ========================================================
-            2. ABOUT OUR LEADERSHIP SECTION (Directly under Hero)
+            3. ABOUT OUR LEADERSHIP SECTION (Directly under Hero)
            ======================================================== */}
         <section
           aria-label="About Our Leadership"
@@ -103,11 +164,11 @@ export default function HomePage() {
             <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center sm:items-start">
               <div className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-[#D4E8EB] bg-[#E8F6F8] w-full max-w-[240px] shadow-sm">
                 <Image
-                  src="/assets/dr-philip-green.png"
+                  src="/assets/image.png"
                   alt="Philip Green, Ph.D. — President, Chesapeake Pharma"
                   fill
                   sizes="(max-width: 768px) 240px, 20vw"
-                  className="object-cover object-top"
+                  className="object-contain object-center"
                 />
               </div>
               <div className="mt-3.5 flex items-center gap-2 text-xs font-semibold text-[#07546A]">
@@ -128,25 +189,29 @@ export default function HomePage() {
                   </span>
                 </div>
                 <p className="text-sm font-semibold text-[#163449]/70 mt-1 mb-4">
-                  President & Founder, Chesapeake Pharma LLC · Weehawken, NJ, USA
+                  President & Founder, Chesapeake Pharma LLC · Weehawken, NJ,
+                  USA
                 </p>
 
                 <div className="space-y-3.5 text-sm sm:text-[15px] leading-relaxed text-[#3D5668]">
                   <p>
-                    Dr. Green has a distinguished career specializing in the commercialization
-                    of drug delivery technologies, spanning commercial strategy and market
-                    positioning of combination products, novel injectables, and
-                    IV-to-subcutaneous transitions. Currently, he consults with leading
-                    pharmaceutical and biotech companies on commercial strategy, business
-                    development, and pipeline optimization.
+                    Dr. Green has a distinguished career specializing in the
+                    commercialization of drug delivery technologies, spanning
+                    commercial strategy and market positioning of combination
+                    products, novel injectables, and IV-to-subcutaneous
+                    transitions. Currently, he consults with leading
+                    pharmaceutical and biotech companies on commercial strategy,
+                    business development, and pipeline optimization.
                   </p>
                   <p>
-                    Previously, Dr. Green served as Executive Director of Biologics Device Strategy
-                    at Merck US (where he led Keytruda SubQ formulation marketing), and spent 16 years
-                    at Becton-Dickinson directing advanced delivery initiatives (transdermal,
-                    microneedle, and high-volume subcutaneous pumps). He holds a PhD in Pharmaceutical
-                    Chemistry from Cardiff University and completed post-doctoral training at the
-                    University of California, San Francisco (UCSF).
+                    Previously, Dr. Green served as Executive Director of
+                    Biologics Device Strategy at Merck US (where he led Keytruda
+                    SubQ formulation marketing), and spent 16 years at
+                    Becton-Dickinson directing advanced delivery initiatives
+                    (transdermal, microneedle, and high-volume subcutaneous
+                    pumps). He holds a PhD in Pharmaceutical Chemistry from
+                    Cardiff University and completed post-doctoral training at
+                    the University of California, San Francisco (UCSF).
                   </p>
                 </div>
               </div>
@@ -158,7 +223,10 @@ export default function HomePage() {
                 >
                   <FileText size={15} />
                   <span>View Full CV</span>
-                  <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight
+                    size={14}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
 
                 <Link
@@ -173,7 +241,7 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================
-            3. KEY SERVICES SECTION (Directly under Leadership)
+            4. KEY SERVICES SECTION
            ======================================================== */}
         <section
           aria-label="Key Services"
@@ -206,7 +274,9 @@ export default function HomePage() {
                   Strategy
                 </h3>
                 <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                  Frame delivery choices around market needs, physician adoption, competitive differentiation, and practical payer positioning.
+                  Frame delivery choices around market needs, physician
+                  adoption, competitive differentiation, and practical payer
+                  positioning.
                 </p>
               </div>
               <div className="mt-6 pt-3 border-t border-line/60">
@@ -215,7 +285,10 @@ export default function HomePage() {
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
                 >
                   <span>Learn more</span>
-                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight
+                    size={13}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
               </div>
             </div>
@@ -232,7 +305,9 @@ export default function HomePage() {
                   Assessment
                 </h3>
                 <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                  Evaluate route, device, autoinjector, and large-volume formulation compatibility to select optimal combination systems.
+                  Evaluate route, device, autoinjector, and large-volume
+                  formulation compatibility to select optimal combination
+                  systems.
                 </p>
               </div>
               <div className="mt-6 pt-3 border-t border-line/60">
@@ -241,7 +316,10 @@ export default function HomePage() {
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
                 >
                   <span>Learn more</span>
-                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight
+                    size={13}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
               </div>
             </div>
@@ -258,7 +336,9 @@ export default function HomePage() {
                   Development
                 </h3>
                 <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                  Translate technical delivery signals into strategic partnership structures, licensing agreements, and co-development terms.
+                  Translate technical delivery signals into strategic
+                  partnership structures, licensing agreements, and
+                  co-development terms.
                 </p>
               </div>
               <div className="mt-6 pt-3 border-t border-line/60">
@@ -267,7 +347,10 @@ export default function HomePage() {
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
                 >
                   <span>Learn more</span>
-                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight
+                    size={13}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
               </div>
             </div>
@@ -284,7 +367,9 @@ export default function HomePage() {
                   Intelligence
                 </h3>
                 <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                  Continuously monitor competing drug delivery technologies, patent landscapes, formulation patents, and competitor pipeline milestones.
+                  Continuously monitor competing drug delivery technologies,
+                  patent landscapes, formulation patents, and competitor
+                  pipeline milestones.
                 </p>
               </div>
               <div className="mt-6 pt-3 border-t border-line/60">
@@ -293,7 +378,10 @@ export default function HomePage() {
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
                 >
                   <span>Learn more</span>
-                  <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight
+                    size={13}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
               </div>
             </div>
@@ -301,7 +389,7 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================
-            4. FOCUSED AREAS (Directly under Key Services)
+            5. FOCUSED AREAS
            ======================================================== */}
         <section
           aria-label="Focused Areas"
@@ -316,7 +404,8 @@ export default function HomePage() {
               <TealWedge className="w-10 h-3" />
             </div>
             <p className="text-xs sm:text-sm text-[#476375] font-medium">
-              Target therapeutic modalities driving high-volume delivery and formulation transitions
+              Target therapeutic modalities driving high-volume delivery and
+              formulation transitions
             </p>
           </div>
 
@@ -343,7 +432,10 @@ export default function HomePage() {
                     Monoclonal Antibodies (mAbs)
                   </h3>
                   <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                    Strategic commercialization and device selection for standard and high-concentration mAbs transitioning from hospital IV infusions to rapid, patient-administered subcutaneous formulations.
+                    Strategic commercialization and device selection for
+                    standard and high-concentration mAbs transitioning from
+                    hospital IV infusions to rapid, patient-administered
+                    subcutaneous formulations.
                   </p>
                 </div>
               </div>
@@ -376,7 +468,10 @@ export default function HomePage() {
                     Bispecific Antibodies
                   </h3>
                   <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                    Navigating complex dose optimization, target affinity balance, immunogenicity risks, and wearable infuser requirements for next-generation multi-specific antibody formats.
+                    Navigating complex dose optimization, target affinity
+                    balance, immunogenicity risks, and wearable infuser
+                    requirements for next-generation multi-specific antibody
+                    formats.
                   </p>
                 </div>
               </div>
@@ -409,7 +504,9 @@ export default function HomePage() {
                     Nucleic Acids & Oligonucleotides
                   </h3>
                   <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                    Formulation stabilization, lipid nanoparticle (LNP) delivery pathways, cold-chain considerations, and target delivery routing across mRNA, siRNA, and gene therapies.
+                    Formulation stabilization, lipid nanoparticle (LNP) delivery
+                    pathways, cold-chain considerations, and target delivery
+                    routing across mRNA, siRNA, and gene therapies.
                   </p>
                 </div>
               </div>
@@ -425,7 +522,8 @@ export default function HomePage() {
           {/* AI Disclaimer Footnote */}
           <div className="mt-8 pt-4 border-t border-[#E6EFF1] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#718898]">
             <p className="italic">
-              * Note: The molecular and cellular images above were generated using AI for representational purposes only.
+              * Note: The molecular and cellular images above were generated
+              using AI for representational purposes only.
             </p>
             <span className="font-semibold text-[#135C70]">
               Chesapeake Pharma Technical Focus
@@ -434,7 +532,7 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================
-            5. TESTIMONIALS & TRUSTED BY (Directly under Focused Areas)
+            6. TESTIMONIALS & TRUSTED BY
            ======================================================== */}
         <section
           aria-label="Testimonials and Trusted By"
@@ -460,10 +558,13 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between border-b border-line/60 pb-3">
                   <MerckLogoBadge />
-                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                  <span className="text-[10px] font-semibold text-muted">
+                    Client Quote
+                  </span>
                 </div>
                 <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
-                  &ldquo;Dr. Green pharmaceutical clients to penetration pharma pharmaceutical company key clients.&rdquo;
+                  &ldquo;Dr. Green pharmaceutical clients to penetration pharma
+                  pharmaceutical company key clients.&rdquo;
                 </p>
               </div>
               <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
@@ -476,10 +577,13 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between border-b border-line/60 pb-3">
                   <NovartisLogoBadge />
-                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                  <span className="text-[10px] font-semibold text-muted">
+                    Client Quote
+                  </span>
                 </div>
                 <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
-                  &ldquo;Dr. Green has a highest pharmaceutical sporadically inovartis.&rdquo;
+                  &ldquo;Dr. Green has a highest pharmaceutical sporadically
+                  inovartis.&rdquo;
                 </p>
               </div>
               <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
@@ -492,10 +596,13 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between border-b border-line/60 pb-3">
                   <NovartisLogoBadge />
-                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                  <span className="text-[10px] font-semibold text-muted">
+                    Client Quote
+                  </span>
                 </div>
                 <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
-                  &ldquo;Dr. Green has distinguished pharmaceutical surg strategy and usen imvental nnovartis.&rdquo;
+                  &ldquo;Dr. Green has distinguished pharmaceutical surg
+                  strategy and usen imvental nnovartis.&rdquo;
                 </p>
               </div>
               <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
@@ -508,10 +615,13 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between border-b border-line/60 pb-3">
                   <MerckLogoBadge />
-                  <span className="text-[10px] font-semibold text-muted">Client Quote</span>
+                  <span className="text-[10px] font-semibold text-muted">
+                    Client Quote
+                  </span>
                 </div>
                 <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
-                  &ldquo;Dr. Green has euntelization pharmaceutical analytics and consultantfy pharmaceutial dest.&rdquo;
+                  &ldquo;Dr. Green has euntelization pharmaceutical analytics
+                  and consultantfy pharmaceutial dest.&rdquo;
                 </p>
               </div>
               <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
@@ -523,11 +633,12 @@ export default function HomePage() {
           {/* Compliance & Verification Footnote */}
           <div className="mt-6 pt-4 border-t border-line/50 text-center">
             <p className="text-xs text-[#6F8A99]">
-              * Content & client logos reflect the layout reference design. Formal endorsement approvals and verified client testimonials pending client confirmation.
+              * Content & client logos reflect the layout reference design.
+              Formal endorsement approvals and verified client testimonials
+              pending client confirmation.
             </p>
           </div>
         </section>
-
       </div>
     </div>
   );
