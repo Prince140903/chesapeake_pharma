@@ -101,7 +101,8 @@ export async function generateResetPasswordAction(
 
 /**
  * Called by client: Update user's password when they set it for the first time
- * Uses the current authenticated session
+ * Uses the current authenticated session to update password in Auth
+ * Uses service-role client to update the password_changed flag in profiles (bypasses RLS)
  */
 export async function setUserPasswordAction(
   newPassword: string
@@ -132,7 +133,7 @@ export async function setUserPasswordAction(
       };
     }
 
-    // Update password in Supabase Auth
+    // Update password in Supabase Auth (using authenticated session)
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword
     });
@@ -145,7 +146,19 @@ export async function setUserPasswordAction(
     }
 
     // Mark password as changed in profiles table
-    const { error: profileError } = await supabase
+    // Use service-role client to bypass RLS policies
+    const adminClient = createAdminServiceClient();
+    if (!adminClient) {
+      console.error("Admin client not configured. Profile flag update will be skipped.");
+      // Don't fail - password was updated in Auth
+      return {
+        success: true,
+        message: "Password updated successfully. You can now access the portal.",
+        error: "Note: Database profile flag update failed. If redirected to password setup on next login, contact admin."
+      };
+    }
+
+    const { error: profileError } = await adminClient
       .from("profiles")
       .update({
         password_changed: true,
@@ -155,7 +168,10 @@ export async function setUserPasswordAction(
 
     if (profileError) {
       console.error("Error updating profile flag:", profileError);
-      // Don't fail the entire operation, password was already changed
+      return {
+        success: false,
+        error: `Failed to update profile: ${profileError.message}`
+      };
     }
 
     revalidatePath("/portal");
