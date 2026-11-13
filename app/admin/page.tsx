@@ -59,6 +59,13 @@ export default function AdminDashboardPage() {
             Operational command center for drug datasets, customer access, and annual subscriptions.
           </p>
         </div>
+        <Link
+          href="/admin/content"
+          className="focus-ring inline-flex items-center gap-2 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-4 py-2 text-xs font-bold text-white shadow-sm transition"
+        >
+          <span>Edit Website Content</span>
+          <ArrowRight size={14} />
+        </Link>
       </div>
 
       {/* Primary KPI Grid */}

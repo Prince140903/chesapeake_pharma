@@ -10,6 +10,7 @@ import {
   Users,
   CreditCard,
   FileSpreadsheet,
+  Globe,
   LogOut,
   Menu,
   X,
@@ -32,6 +33,7 @@ interface AdminLayoutShellProps {
 
 const navLinks = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/content", label: "Website Content & Publications", icon: Globe },
   { href: "/admin/drugs", label: "Drug Management", icon: Pill },
   { href: "/admin/users", label: "User Management", icon: Users },
   { href: "/admin/subscriptions", label: "Subscription Management", icon: CreditCard },
