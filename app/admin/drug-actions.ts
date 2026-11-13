@@ -55,13 +55,53 @@ export async function fetchDrugsAction(): Promise<DrugActionResponse<AdminDrug[]
 
     const { data, error } = await supabase
       .from("drugs")
-      .select("*")
+      .select("*, drug_references(*)")
       .order("created_at", { ascending: false });
 
     if (error) {
+      const fallback = await supabase
+        .from("drugs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (fallback.error) {
+        return {
+          success: false,
+          error: fallback.error.message
+        };
+      }
+
+      const drugIds = (fallback.data || []).map((d: any) => d.id);
+      let refMap: Record<string, any[]> = {};
+      if (drugIds.length > 0) {
+        const { data: refData } = await supabase
+          .from("drug_references")
+          .select("*")
+          .in("drug_id", drugIds)
+          .order("reference_order", { ascending: true });
+        if (refData) {
+          refData.forEach((ref: any) => {
+            if (!refMap[ref.drug_id]) refMap[ref.drug_id] = [];
+            refMap[ref.drug_id].push(ref);
+          });
+        }
+      }
+
+      const drugs = (fallback.data || []).map((drug: any) => ({
+        ...drug,
+        route: drug.route,
+        references: (refMap[drug.id] || []).map((ref: any) => ({
+          id: ref.id,
+          source: ref.source || "reference",
+          title: ref.reference_value || ref.title || "",
+          year: ref.year || "",
+          url: ref.url || ""
+        }))
+      }));
+
       return {
-        success: false,
-        error: error.message
+        success: true,
+        data: drugs
       };
     }
 
@@ -69,7 +109,13 @@ export async function fetchDrugsAction(): Promise<DrugActionResponse<AdminDrug[]
     const drugs = (data || []).map((drug: any) => ({
       ...drug,
       route: drug.route,
-      references: []
+      references: (drug.drug_references || []).map((ref: any) => ({
+        id: ref.id,
+        source: ref.source || "reference",
+        title: ref.reference_value || ref.title || "",
+        year: ref.year || "",
+        url: ref.url || ""
+      }))
     }));
 
     return {
@@ -633,17 +679,60 @@ export async function fetchPortalDrugsAction(): Promise<DrugActionResponse<Admin
     });
     const allowedDatasets = Array.from(datasetSet);
 
-    // 7. Fetch drugs belonging only to the user's authorized datasets
+    // 7. Fetch drugs belonging only to the user's authorized datasets with references
     const { data, error } = await supabase
       .from("drugs")
-      .select("*")
+      .select("*, drug_references(*)")
       .in("dataset_type", allowedDatasets)
       .order("created_at", { ascending: false });
 
     if (error) {
+      // Fallback if join or relationship has an issue: fetch drugs without join
+      const fallback = await supabase
+        .from("drugs")
+        .select("*")
+        .in("dataset_type", allowedDatasets)
+        .order("created_at", { ascending: false });
+
+      if (fallback.error) {
+        return {
+          success: false,
+          error: fallback.error.message
+        };
+      }
+
+      // Try fetching references separately for fallback
+      const drugIds = (fallback.data || []).map((d: any) => d.id);
+      let refMap: Record<string, any[]> = {};
+      if (drugIds.length > 0) {
+        const { data: refData } = await supabase
+          .from("drug_references")
+          .select("*")
+          .in("drug_id", drugIds)
+          .order("reference_order", { ascending: true });
+        if (refData) {
+          refData.forEach((ref: any) => {
+            if (!refMap[ref.drug_id]) refMap[ref.drug_id] = [];
+            refMap[ref.drug_id].push(ref);
+          });
+        }
+      }
+
+      const drugs = (fallback.data || []).map((drug: any) => ({
+        ...drug,
+        route: drug.route,
+        references: (refMap[drug.id] || []).map((ref: any) => ({
+          id: ref.id,
+          source: ref.source || "reference",
+          title: ref.reference_value || ref.title || "",
+          year: ref.year || "",
+          url: ref.url || ""
+        }))
+      }));
+
       return {
-        success: false,
-        error: error.message
+        success: true,
+        data: drugs
       };
     }
 
@@ -651,7 +740,13 @@ export async function fetchPortalDrugsAction(): Promise<DrugActionResponse<Admin
     const drugs = (data || []).map((drug: any) => ({
       ...drug,
       route: drug.route,
-      references: []
+      references: (drug.drug_references || []).map((ref: any) => ({
+        id: ref.id,
+        source: ref.source || "reference",
+        title: ref.reference_value || ref.title || "",
+        year: ref.year || "",
+        url: ref.url || ""
+      }))
     }));
 
     return {

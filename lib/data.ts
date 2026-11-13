@@ -1,5 +1,13 @@
 export type Dataset = "DB1" | "DB2";
 
+export type DrugReference = {
+  id?: string;
+  source?: string;
+  title: string;
+  year?: string;
+  url?: string;
+};
+
 export type DrugRecord = {
   id: string;
   dataset: Dataset;
@@ -16,6 +24,11 @@ export type DrugRecord = {
   pharmacology: string;
   volume?: string;
   type?: string;
+  ivShiftNce?: string;
+  ivDoseMg?: string;
+  scDoseMg?: string;
+  entryDate?: string;
+  references?: DrugReference[];
 };
 
 export const services = [

@@ -132,6 +132,38 @@ export function DrugDetailModal({ drug, onClose }: DrugDetailModalProps) {
                 <p className="text-sm text-navy">{drug.dose}</p>
               </div>
             )}
+
+            {/* References */}
+            {drug.references && drug.references.length > 0 && (
+              <div className="border-t border-line pt-6">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+                  References & Citations ({drug.references.length})
+                </h3>
+                <div className="space-y-2">
+                  {drug.references.map((ref, idx) => (
+                    <div key={ref.id || idx} className="rounded border border-line bg-canvas p-3 text-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-medium text-navy">{ref.title}</span>
+                        {ref.year && <span className="text-xs text-muted shrink-0">{ref.year}</span>}
+                      </div>
+                      {ref.source && ref.source !== "reference" && (
+                        <p className="mt-1 text-xs text-teal">{ref.source}</p>
+                      )}
+                      {ref.url && (
+                        <a
+                          href={ref.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-block text-xs text-teal underline hover:text-teal/80"
+                        >
+                          View Link
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer Actions */}

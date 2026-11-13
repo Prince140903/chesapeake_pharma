@@ -6,18 +6,20 @@ import { PortalShell } from "@/components/portal-shell";
 import { type DrugRecord } from "@/lib/data";
 import { fetchPortalDrugsAction } from "@/app/admin/drug-actions";
 import { DrugDetailModal } from "@/components/drug-detail-modal";
+import { SearchableSelect } from "@/components/searchable-select";
+import { downloadDrugsCSV } from "@/lib/export-csv";
 
 type FilterState = {
-  volume: string;
-  route: string;
-  pharmacology: string;
-  indication: string;
-  therapyArea: string;
-  type: string;
-  phase: string;
-  frequency: string;
-  device: string;
-  company: string;
+  volume: string[];
+  route: string[];
+  pharmacology: string[];
+  indication: string[];
+  therapyArea: string[];
+  type: string[];
+  phase: string[];
+  frequency: string[];
+  device: string[];
+  company: string[];
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -28,16 +30,16 @@ export default function PortalPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDrug, setSelectedDrug] = useState<DrugRecord | null>(null);
   const [filters, setFilters] = useState<FilterState>({
-    volume: "",
-    route: "",
-    pharmacology: "",
-    indication: "",
-    therapyArea: "",
-    type: "",
-    phase: "",
-    frequency: "",
-    device: "",
-    company: "",
+    volume: [],
+    route: [],
+    pharmacology: [],
+    indication: [],
+    therapyArea: [],
+    type: [],
+    phase: [],
+    frequency: [],
+    device: [],
+    company: [],
   });
   const [activeDataset, setActiveDataset] = useState<"All" | "DB1" | "DB2">(
     "All"
@@ -67,8 +69,16 @@ export default function PortalPage() {
             therapyArea: drug.field || "Not specified",
             frequency: drug.frequency || "Not specified",
             pharmacology: drug.pharmacology || "Not specified",
-            volume: drug.est_sc_volume_ml || undefined,
+            volume:
+              drug.est_sc_volume_ml !== null && drug.est_sc_volume_ml !== undefined
+                ? String(drug.est_sc_volume_ml)
+                : undefined,
             type: drug.type || "Not specified",
+            ivShiftNce: drug.iv_shift_nce,
+            ivDoseMg: drug.iv_dose_mg,
+            scDoseMg: drug.sc_dose_mg,
+            entryDate: drug.entry_date,
+            references: drug.references || [],
           }));
           setDrugs(mapped);
         } else {
@@ -84,6 +94,41 @@ export default function PortalPage() {
 
     loadDrugs();
   }, []);
+
+  // Compute unique suggestion options for each filter field
+  const filterOptions = useMemo(() => {
+    const targetPool =
+      activeDataset === "All"
+        ? drugs
+        : drugs.filter((d) => d.dataset === activeDataset);
+
+    const getUniqueSorted = (extractor: (d: DrugRecord) => any) => {
+      const set = new Set<string>();
+      targetPool.forEach((d) => {
+        const raw = extractor(d);
+        if (raw !== null && raw !== undefined) {
+          const str = String(raw).trim();
+          if (str && str !== "Not specified" && str !== "Unspecified") {
+            set.add(str);
+          }
+        }
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    };
+
+    return {
+      volume: getUniqueSorted((d) => d.volume),
+      route: getUniqueSorted((d) => d.route),
+      pharmacology: getUniqueSorted((d) => d.pharmacology),
+      indication: getUniqueSorted((d) => d.indication),
+      therapyArea: getUniqueSorted((d) => d.therapyArea),
+      type: getUniqueSorted((d) => d.type),
+      phase: getUniqueSorted((d) => d.phase),
+      frequency: getUniqueSorted((d) => d.frequency),
+      device: getUniqueSorted((d) => d.device),
+      company: getUniqueSorted((d) => d.company),
+    };
+  }, [drugs, activeDataset]);
 
   // Filter and search logic
   const filteredDrugs = useMemo(() => {
@@ -105,65 +150,45 @@ export default function PortalPage() {
         }
       }
 
-      // Advanced filters
-      if (
-        filters.volume &&
-        !(drug.volume && drug.volume.toLowerCase().includes(filters.volume.toLowerCase()))
-      ) {
+      // Advanced filters (multi-select supports matching any of the chosen options)
+      const matchesAnyOption = (
+        selectedList: string[],
+        drugValue?: string | number | null
+      ) => {
+        if (!selectedList || selectedList.length === 0) return true;
+        if (!drugValue) return false;
+        const valStr = String(drugValue).toLowerCase();
+        return selectedList.some((sel) => valStr.includes(sel.toLowerCase()));
+      };
+
+      if (!matchesAnyOption(filters.volume, drug.volume)) {
         return false;
       }
-      if (
-        filters.route &&
-        !drug.route.toLowerCase().includes(filters.route.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.route, drug.route)) {
         return false;
       }
-      if (
-        filters.pharmacology &&
-        !drug.pharmacology.toLowerCase().includes(filters.pharmacology.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.pharmacology, drug.pharmacology)) {
         return false;
       }
-      if (
-        filters.indication &&
-        !drug.indication.toLowerCase().includes(filters.indication.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.indication, drug.indication)) {
         return false;
       }
-      if (
-        filters.therapyArea &&
-        !drug.therapyArea.toLowerCase().includes(filters.therapyArea.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.therapyArea, drug.therapyArea)) {
         return false;
       }
-      if (
-        filters.type &&
-        !(drug.type && drug.type.toLowerCase().includes(filters.type.toLowerCase()))
-      ) {
+      if (!matchesAnyOption(filters.type, drug.type)) {
         return false;
       }
-      if (
-        filters.phase &&
-        !drug.phase.toLowerCase().includes(filters.phase.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.phase, drug.phase)) {
         return false;
       }
-      if (
-        filters.frequency &&
-        !(drug.frequency && drug.frequency.toLowerCase().includes(filters.frequency.toLowerCase()))
-      ) {
+      if (!matchesAnyOption(filters.frequency, drug.frequency)) {
         return false;
       }
-      if (
-        filters.device &&
-        !drug.device.toLowerCase().includes(filters.device.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.device, drug.device)) {
         return false;
       }
-      if (
-        filters.company &&
-        !drug.company.toLowerCase().includes(filters.company.toLowerCase())
-      ) {
+      if (!matchesAnyOption(filters.company, drug.company)) {
         return false;
       }
 
@@ -179,29 +204,29 @@ export default function PortalPage() {
   }, [filteredDrugs, currentPage]);
 
   const hasActiveFilters =
-    Object.values(filters).some((v) => v !== "") || searchTerm;
+    Object.values(filters).some((list) => list.length > 0) || searchTerm !== "";
 
   const handleResetFilters = () => {
     setSearchTerm("");
     setFilters({
-      volume: "",
-      route: "",
-      pharmacology: "",
-      indication: "",
-      therapyArea: "",
-      type: "",
-      phase: "",
-      frequency: "",
-      device: "",
-      company: "",
+      volume: [],
+      route: [],
+      pharmacology: [],
+      indication: [],
+      therapyArea: [],
+      type: [],
+      phase: [],
+      frequency: [],
+      device: [],
+      company: [],
     });
     setCurrentPage(1);
   };
 
-  const updateFilter = (key: keyof FilterState, value: string) => {
+  const updateFilter = (key: keyof FilterState, values: string[]) => {
     setFilters((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: values,
     }));
     setCurrentPage(1);
   };
@@ -209,6 +234,23 @@ export default function PortalPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // CSV download handler
+  const handleDownloadCSV = () => {
+    // If search term and advanced filters are empty, download whole dataset (filtered by activeDataset if chosen)
+    // Otherwise download search/filter results
+    const dataToExport = hasActiveFilters
+      ? filteredDrugs
+      : activeDataset === "All"
+        ? drugs
+        : drugs.filter((d) => d.dataset === activeDataset);
+
+    const filename = hasActiveFilters
+      ? `drugs_search_results_${new Date().toISOString().slice(0, 10)}.csv`
+      : `all_drugs_${activeDataset.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    downloadDrugsCSV(dataToExport, filename);
   };
 
   return (
@@ -283,7 +325,11 @@ export default function PortalPage() {
                 />
               </button>
 
-              <button className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">
+              <button
+                onClick={handleDownloadCSV}
+                title={hasActiveFilters ? "Download filtered results" : "Download all drugs"}
+                className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 transition-colors shadow-sm"
+              >
                 <Download size={16} />
                 Download CSV
               </button>
@@ -293,137 +339,90 @@ export default function PortalPage() {
           {/* Advanced Search Panel */}
           {showAdvanced && (
             <div className="mb-6 rounded-lg border border-line bg-white p-6 shadow-card">
-              <h3 className="mb-4 text-sm font-semibold text-navy">Filter by:</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-navy">Filter by:</h3>
+                <span className="text-xs text-muted">Type or pick from suggestions</span>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Est SC Injection Volume (mL)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., 0.5"
-                    value={filters.volume}
-                    onChange={(e) => updateFilter("volume", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Est SC Injection Volume (mL)"
+                  placeholder="e.g., 0.5"
+                  selectedValues={filters.volume}
+                  options={filterOptions.volume}
+                  onChange={(vals) => updateFilter("volume", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Route
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., SC, IV"
-                    value={filters.route}
-                    onChange={(e) => updateFilter("route", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Route"
+                  placeholder="e.g., SC, IV"
+                  selectedValues={filters.route}
+                  options={filterOptions.route}
+                  onChange={(vals) => updateFilter("route", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Pharmacology
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Search pharmacology"
-                    value={filters.pharmacology}
-                    onChange={(e) => updateFilter("pharmacology", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Pharmacology"
+                  placeholder="Search pharmacology"
+                  selectedValues={filters.pharmacology}
+                  options={filterOptions.pharmacology}
+                  onChange={(vals) => updateFilter("pharmacology", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Indication
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Oncology"
-                    value={filters.indication}
-                    onChange={(e) => updateFilter("indication", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Indication"
+                  placeholder="e.g., Oncology"
+                  selectedValues={filters.indication}
+                  options={filterOptions.indication}
+                  onChange={(vals) => updateFilter("indication", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Therapy Area (Field)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Biologic"
-                    value={filters.therapyArea}
-                    onChange={(e) => updateFilter("therapyArea", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Therapy Area (Field)"
+                  placeholder="e.g., Biologic"
+                  selectedValues={filters.therapyArea}
+                  options={filterOptions.therapyArea}
+                  onChange={(vals) => updateFilter("therapyArea", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Type
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Small Molecule"
-                    value={filters.type}
-                    onChange={(e) => updateFilter("type", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Type"
+                  placeholder="e.g., Small Molecule"
+                  selectedValues={filters.type}
+                  options={filterOptions.type}
+                  onChange={(vals) => updateFilter("type", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Phase
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Phase III"
-                    value={filters.phase}
-                    onChange={(e) => updateFilter("phase", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Phase"
+                  placeholder="e.g., Phase III"
+                  selectedValues={filters.phase}
+                  options={filterOptions.phase}
+                  onChange={(vals) => updateFilter("phase", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Frequency (Dosing Interval)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Daily"
-                    value={filters.frequency}
-                    onChange={(e) => updateFilter("frequency", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Frequency (Dosing Interval)"
+                  placeholder="e.g., Daily"
+                  selectedValues={filters.frequency}
+                  options={filterOptions.frequency}
+                  onChange={(vals) => updateFilter("frequency", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Device/Formulation
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Autoinjector"
-                    value={filters.device}
-                    onChange={(e) => updateFilter("device", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Device/Formulation"
+                  placeholder="e.g., Autoinjector"
+                  selectedValues={filters.device}
+                  options={filterOptions.device}
+                  onChange={(vals) => updateFilter("device", vals)}
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-navy">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Merck"
-                    value={filters.company}
-                    onChange={(e) => updateFilter("company", e.target.value)}
-                    className="mt-2 w-full rounded border border-line px-3 py-2 text-sm focus:border-teal focus:outline-none"
-                  />
-                </div>
+                <SearchableSelect
+                  label="Company Name"
+                  placeholder="e.g., Merck"
+                  selectedValues={filters.company}
+                  options={filterOptions.company}
+                  onChange={(vals) => updateFilter("company", vals)}
+                />
               </div>
 
               {hasActiveFilters && (
