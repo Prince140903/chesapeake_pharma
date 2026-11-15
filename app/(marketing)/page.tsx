@@ -315,7 +315,7 @@ export default async function HomePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6EFF1]">
             <div className="flex items-center gap-3">
               <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
-                FOCUSED AREAS
+                EXPERTISE
               </h2>
               <TealWedge className="w-10 h-3" />
             </div>

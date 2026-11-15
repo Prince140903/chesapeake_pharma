@@ -9,7 +9,7 @@ export const firmCopy = {
 export const firm = {
   name: "Chesapeake Pharma LLC",
   location: "Weehawken, NJ, USA",
-  email: "Philgreen2236@hotmail.com",
+  email: "chesapeakepharm@gmail.com",
   descriptor: "Independent drug delivery consulting and commercial intelligence for pharmaceutical and biotech teams.",
 };
 
@@ -17,7 +17,7 @@ export const leadership = {
   name: "Philip Green Ph.D",
   title: "President",
   location: "Weehawken, NJ, USA",
-  email: "Philgreen2236@hotmail.com",
+  email: "chesapeakepharm@gmail.com",
   eyebrow: "President, Chesapeake Pharma",
   biography: [
     "Phil has a distinguished career in the pharmaceutical industry, specializing in the commercialization of drug delivery technologies. His expertise spans the commercial strategy and market positioning of combination drug-device products, with a particular focus on novel injectables and the transition from IV to subcutaneous administration.",

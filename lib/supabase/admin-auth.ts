@@ -44,7 +44,7 @@ export async function verifyAdminSession(): Promise<AdminAuthResult> {
       isAdmin: true,
       user: {
         id: "usr-000",
-        email: "philgreen2236@hotmail.com"
+        email: "chesapeakepharm@gmail.com"
       },
       profile: {
         id: "usr-000",

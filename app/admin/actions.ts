@@ -30,29 +30,29 @@ export async function signInAdminAction(
   }
 
   // Check if Supabase credentials are configured in environment
-  if (!isSupabaseConfigured()) {
-    // Graceful demo mode validation
-    if (email === "philgreen2236@hotmail.com" && password === "Chesapeake2026!Secure") {
-      return {
-        success: true,
-        isConfigured: false
-      };
-    }
+  // if (!isSupabaseConfigured()) {
+  //   // Graceful demo mode validation
+  //   if (email === "chesapeakepharm@gmail.com" && password === "Chesapeake2026!Secure") {
+  //     return {
+  //       success: true,
+  //       isConfigured: false
+  //     };
+  //   }
 
-    if (password === "wrongpassword" || password.length < 6) {
-      return {
-        success: false,
-        error: "Invalid administrator credentials. (Demo check)",
-        isConfigured: false
-      };
-    }
+  //   if (password === "wrongpassword" || password.length < 6) {
+  //     return {
+  //       success: false,
+  //       error: "Invalid administrator credentials. (Demo check)",
+  //       isConfigured: false
+  //     };
+  //   }
 
-    // Default demo success for other authorized credentials
-    return {
-      success: true,
-      isConfigured: false
-    };
-  }
+  //   // Default demo success for other authorized credentials
+  //   return {
+  //     success: true,
+  //     isConfigured: false
+  //   };
+  // }
 
   const supabase = createClient();
   if (!supabase) {

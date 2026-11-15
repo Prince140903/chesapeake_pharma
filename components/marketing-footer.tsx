@@ -39,14 +39,14 @@ export function MarketingFooter() {
 
               <div className="pt-3">
                 <a
-                  href="mailto:Philgreen2236@hotmail.com"
+                  href="mailto:chesapeakepharm@gmail.com"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[#42B7B9] hover:text-[#6ee7b7] transition-colors group"
                 >
                   <Mail
                     size={15}
                     className="shrink-0 transition-transform group-hover:scale-110"
                   />
-                  Philgreen2236@hotmail.com
+                  chesapeakepharm@gmail.com
                 </a>
               </div>
             </div>
