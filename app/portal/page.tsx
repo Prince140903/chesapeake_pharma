@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, ChevronDown, Download, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  Download,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { PortalShell } from "@/components/portal-shell";
 import { type DrugRecord } from "@/lib/data";
 import { fetchPortalDrugsAction } from "@/app/admin/drug-actions";
@@ -42,7 +49,7 @@ export default function PortalPage() {
     company: [],
   });
   const [activeDataset, setActiveDataset] = useState<"All" | "DB1" | "DB2">(
-    "All"
+    "All",
   );
   const [drugs, setDrugs] = useState<DrugRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +77,8 @@ export default function PortalPage() {
             frequency: drug.frequency || "Not specified",
             pharmacology: drug.pharmacology || "Not specified",
             volume:
-              drug.est_sc_volume_ml !== null && drug.est_sc_volume_ml !== undefined
+              drug.est_sc_volume_ml !== null &&
+              drug.est_sc_volume_ml !== undefined
                 ? String(drug.est_sc_volume_ml)
                 : undefined,
             type: drug.type || "Not specified",
@@ -153,7 +161,7 @@ export default function PortalPage() {
       // Advanced filters (multi-select supports matching any of the chosen options)
       const matchesAnyOption = (
         selectedList: string[],
-        drugValue?: string | number | null
+        drugValue?: string | number | null,
       ) => {
         if (!selectedList || selectedList.length === 0) return true;
         if (!drugValue) return false;
@@ -272,7 +280,10 @@ export default function PortalPage() {
           {/* Search Bar */}
           <div className="mb-6">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+                size={18}
+              />
               <input
                 type="text"
                 placeholder="Search by compound, brand, sponsor, device, or route..."
@@ -327,7 +338,11 @@ export default function PortalPage() {
 
               <button
                 onClick={handleDownloadCSV}
-                title={hasActiveFilters ? "Download filtered results" : "Download all drugs"}
+                title={
+                  hasActiveFilters
+                    ? "Download filtered results"
+                    : "Download all drugs"
+                }
                 className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 transition-colors shadow-sm"
               >
                 <Download size={16} />
@@ -341,12 +356,14 @@ export default function PortalPage() {
             <div className="mb-6 rounded-lg border border-line bg-white p-6 shadow-card">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-navy">Filter by:</h3>
-                <span className="text-xs text-muted">Type or pick from suggestions</span>
+                <span className="text-xs text-muted">
+                  Type or pick from suggestions
+                </span>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <SearchableSelect
                   label="Est SC Injection Volume (mL)"
-                  placeholder="e.g., 0.5"
+                  placeholder="Search volume"
                   selectedValues={filters.volume}
                   options={filterOptions.volume}
                   onChange={(vals) => updateFilter("volume", vals)}
@@ -354,7 +371,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Route"
-                  placeholder="e.g., SC, IV"
+                  placeholder="Search route"
                   selectedValues={filters.route}
                   options={filterOptions.route}
                   onChange={(vals) => updateFilter("route", vals)}
@@ -370,7 +387,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Indication"
-                  placeholder="e.g., Oncology"
+                  placeholder="Search indication"
                   selectedValues={filters.indication}
                   options={filterOptions.indication}
                   onChange={(vals) => updateFilter("indication", vals)}
@@ -378,7 +395,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Therapy Area (Field)"
-                  placeholder="e.g., Biologic"
+                  placeholder="Search therapy"
                   selectedValues={filters.therapyArea}
                   options={filterOptions.therapyArea}
                   onChange={(vals) => updateFilter("therapyArea", vals)}
@@ -386,7 +403,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Type"
-                  placeholder="e.g., Small Molecule"
+                  placeholder="Search type"
                   selectedValues={filters.type}
                   options={filterOptions.type}
                   onChange={(vals) => updateFilter("type", vals)}
@@ -394,7 +411,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Phase"
-                  placeholder="e.g., Phase III"
+                  placeholder="Search phase"
                   selectedValues={filters.phase}
                   options={filterOptions.phase}
                   onChange={(vals) => updateFilter("phase", vals)}
@@ -402,7 +419,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Frequency (Dosing Interval)"
-                  placeholder="e.g., Daily"
+                  placeholder="Search frequency"
                   selectedValues={filters.frequency}
                   options={filterOptions.frequency}
                   onChange={(vals) => updateFilter("frequency", vals)}
@@ -410,7 +427,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Device/Formulation"
-                  placeholder="e.g., Autoinjector"
+                  placeholder="Search device"
                   selectedValues={filters.device}
                   options={filterOptions.device}
                   onChange={(vals) => updateFilter("device", vals)}
@@ -418,7 +435,7 @@ export default function PortalPage() {
 
                 <SearchableSelect
                   label="Company Name"
-                  placeholder="e.g., Merck"
+                  placeholder="Search company"
                   selectedValues={filters.company}
                   options={filterOptions.company}
                   onChange={(vals) => updateFilter("company", vals)}
@@ -446,9 +463,7 @@ export default function PortalPage() {
               <h3 className="mt-4 text-lg font-semibold text-navy">
                 Loading drug database...
               </h3>
-              <p className="mt-2 text-muted">
-                Fetching data from Supabase
-              </p>
+              <p className="mt-2 text-muted">Fetching data from Supabase</p>
             </div>
           )}
 
@@ -512,8 +527,14 @@ export default function PortalPage() {
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between rounded-lg bg-white p-4">
                       <div className="text-sm text-muted">
-                        Page <span className="font-semibold text-navy">{currentPage}</span> of{" "}
-                        <span className="font-semibold text-navy">{totalPages}</span>
+                        Page{" "}
+                        <span className="font-semibold text-navy">
+                          {currentPage}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-semibold text-navy">
+                          {totalPages}
+                        </span>
                       </div>
 
                       <div className="flex gap-2">
@@ -527,32 +548,35 @@ export default function PortalPage() {
                         </button>
 
                         <div className="flex gap-1">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            let pageNum;
-                            if (totalPages <= 5) {
-                              pageNum = i + 1;
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1;
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i;
-                            } else {
-                              pageNum = currentPage - 2 + i;
-                            }
+                          {Array.from(
+                            { length: Math.min(5, totalPages) },
+                            (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
 
-                            return (
-                              <button
-                                key={pageNum}
-                                onClick={() => handlePageChange(pageNum)}
-                                className={`rounded px-2.5 py-1.5 text-sm font-semibold ${
-                                  pageNum === currentPage
-                                    ? "bg-teal text-white"
-                                    : "border border-line bg-white text-navy hover:bg-canvas"
-                                }`}
-                              >
-                                {pageNum}
-                              </button>
-                            );
-                          })}
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => handlePageChange(pageNum)}
+                                  className={`rounded px-2.5 py-1.5 text-sm font-semibold ${
+                                    pageNum === currentPage
+                                      ? "bg-teal text-white"
+                                      : "border border-line bg-white text-navy hover:bg-canvas"
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            },
+                          )}
                         </div>
 
                         <button
@@ -574,8 +598,8 @@ export default function PortalPage() {
                     No drugs found
                   </h3>
                   <p className="mt-2 text-muted">
-                    Try adjusting your search or filters to find what you&apos;re
-                    looking for.
+                    Try adjusting your search or filters to find what
+                    you&apos;re looking for.
                   </p>
                   {hasActiveFilters && (
                     <button

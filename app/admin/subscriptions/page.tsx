@@ -260,14 +260,10 @@ export default function AdminSubscriptionsPage() {
                 </tr>
               ) : (
                 filteredSubscriptions.map((sub) => {
-                  {
-                    console.log(sub);
-                  }
                   const isExpiringSoon = (() => {
                     if (sub.status !== "active") return false;
                     const diffDays =
-                      (new Date(sub.expires_at).getTime() -
-                        new Date("2026-10-26").getTime()) /
+                      (new Date(sub.expires_at).getTime() - Date.now()) /
                       (1000 * 3600 * 24);
                     return diffDays > 0 && diffDays <= 60;
                   })();

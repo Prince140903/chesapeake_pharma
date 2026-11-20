@@ -32,11 +32,11 @@ export default function AdminDashboardPage() {
     (s) => s.dataset_type === "DB2" && s.status === "active"
   ).length;
 
-  // Expiring soon: within ~60 days (or simulated)
+  // Expiring soon: within ~60 days relative to current time
   const expiringSoonCount = subscriptions.filter((s) => {
     if (s.status !== "active") return false;
     const expiry = new Date(s.expires_at).getTime();
-    const now = new Date("2026-10-26").getTime();
+    const now = Date.now();
     const diffDays = (expiry - now) / (1000 * 3600 * 24);
     return diffDays > 0 && diffDays <= 60;
   }).length;

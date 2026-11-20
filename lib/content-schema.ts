@@ -8,6 +8,8 @@ export interface HeroContent {
   description: string;
   primary_btn_text: string;
   primary_btn_link: string;
+  secondary_btn_text?: string;
+  secondary_btn_link?: string;
   banner_image: string;
   banner_image_alt: string;
   banner_images?: string[];
@@ -141,12 +143,12 @@ export const defaultHomePageContent: HomePageContent = {
       "Expert guidance on combination products, novel injectables, and IV-to-subcutaneous transitions to derisk pharmaceutical pipeline investments.",
     primary_btn_text: "SCHEDULE A CONSULTATION",
     primary_btn_link: "/contact",
-    banner_image: "/assets/banner.png",
+    banner_image: "/assets/docx_images/image2.png",
     banner_image_alt: "Chesapeake Pharma consulting banner",
     banner_images: [
-      "/assets/banner.png",
       "/assets/docx_images/image2.png",
-      "/assets/docx_images/image3.png"
+      "/assets/docx_images/image3.png",
+      "/assets/docx_images/image4.jpeg"
     ],
     citation:
       "*From: Lyness A, Burke J. Investigating imaging modalities to characterize injection deposition for LVSC device design. PDA Universe of Pre-Filled Syringes and Injection Devices; 2026 Oct 6-7; Palm Springs, CA, USA."

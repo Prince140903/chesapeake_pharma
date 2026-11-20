@@ -34,10 +34,10 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="w-full bg-[#F5F8FA] pb-16 pt-6 sm:pt-8 lg:pt-10 space-y-12 sm:space-y-16 lg:space-y-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 lg:space-y-20">
+    <div className="w-full bg-[#F5F8FA] pb-12 pt-4 sm:pt-6 lg:pt-8 space-y-10 sm:space-y-12 lg:space-y-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12 lg:space-y-16">
         {/* ========================================================
-            1. HERO SECTION - Image Slider Component with Content Overlay
+            1. HERO SECTION - Redesigned Slider Above & Text Below
            ======================================================== */}
         <HeroBannerSlider hero={hero} />
 

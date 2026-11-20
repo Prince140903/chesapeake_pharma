@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminServiceClient } from "@/lib/supabase/service-role";
 
 export interface AdminSubscription {
   id: string;
@@ -29,7 +30,7 @@ export interface SubscriptionActionResponse<T = any> {
  */
 export async function fetchSubscriptionsAction(): Promise<SubscriptionActionResponse<AdminSubscription[]>> {
   try {
-    const supabase = createClient();
+    const supabase = createAdminServiceClient() || createClient();
     if (!supabase) {
       return {
         success: false,
@@ -54,22 +55,59 @@ export async function fetchSubscriptionsAction(): Promise<SubscriptionActionResp
     const uniqueUserIds: string[] = [];
     const seenIds = new Set<string>();
     (data || []).forEach((sub: any) => {
-      if (!seenIds.has(sub.user_id)) {
+      if (sub.user_id && !seenIds.has(sub.user_id)) {
         uniqueUserIds.push(sub.user_id);
         seenIds.add(sub.user_id);
       }
     });
 
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, company_name")
-      .in("id", uniqueUserIds);
+    let profiles: any[] = [];
+    if (uniqueUserIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, company_name")
+        .in("id", uniqueUserIds);
+      profiles = profilesData || [];
+    }
 
     // Create a map of profiles for quick lookup
-    const profileMap = new Map();
-    (profiles || []).forEach((profile: any) => {
-      profileMap.set(profile.id, profile);
+    const profileMap = new Map<string, { id: string; full_name?: string; email?: string; company_name?: string }>();
+    profiles.forEach((profile: any) => {
+      profileMap.set(profile.id, {
+        id: profile.id,
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        company_name: profile.company_name || ""
+      });
     });
+
+    // Check if any user profile is missing email or info, fallback to Supabase auth users
+    const missingUserIds = uniqueUserIds.filter((uid) => {
+      const p = profileMap.get(uid);
+      return !p || !p.email;
+    });
+
+    if (missingUserIds.length > 0) {
+      const adminClient = createAdminServiceClient();
+      if (adminClient) {
+        try {
+          const { data: authUsers } = await adminClient.auth.admin.listUsers();
+          (authUsers?.users || []).forEach((u) => {
+            if (missingUserIds.includes(u.id)) {
+              const existing = profileMap.get(u.id);
+              profileMap.set(u.id, {
+                id: u.id,
+                full_name: existing?.full_name || u.user_metadata?.full_name || "",
+                email: existing?.email || u.email || "",
+                company_name: existing?.company_name || u.user_metadata?.company_name || ""
+              });
+            }
+          });
+        } catch (e) {
+          console.warn("Could not fetch auth users fallback:", e);
+        }
+      }
+    }
 
     // Map database records to AdminSubscription format
     const subscriptions = (data || []).map((sub: any) => {

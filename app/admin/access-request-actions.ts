@@ -418,9 +418,6 @@ export async function completeAccessApprovalAction(
     // 2. Generate temporary password (cryptographically secure)
     const tempPassword = generateTemporaryPassword();
 
-    //this is just till the emailjs setup completes.
-    console.log("password: ", tempPassword);
-
     // 3. Create or retrieve user in Supabase Auth
     // This step determines userId which is used for profile/subscriptions
     let userId: string | null = null;
@@ -484,6 +481,7 @@ export async function completeAccessApprovalAction(
     const profileData = {
       id: userId,
       full_name: accessRequest.full_name,
+      email: accessRequest.email,
       company_name: accessRequest.company_name,
       role: "subscriber",
       approval_status: "approved",
