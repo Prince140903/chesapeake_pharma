@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { formatUSDate } from "@/lib/timezone";
 import {
   FileSpreadsheet,
   UploadCloud,
@@ -410,7 +411,7 @@ export default function AdminImportsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-[11px]">
-                      {new Date(job.created_at).toLocaleDateString()}
+                      {formatUSDate(job.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

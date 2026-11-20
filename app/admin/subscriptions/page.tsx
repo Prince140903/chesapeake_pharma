@@ -20,6 +20,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useAdmin } from "@/components/admin/admin-context";
+import { formatUSDate } from "@/lib/timezone";
 import { AdminSubscription } from "@/app/admin/subscription-actions";
 
 export default function AdminSubscriptionsPage() {
@@ -323,12 +324,12 @@ export default function AdminSubscriptionsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-slate-700 font-medium">
-                        {sub.starts_at}
+                        {formatUSDate(sub.starts_at)}
                       </td>
                       <td className="px-4 py-3 font-semibold text-[#0B2D45]">
-                        <div>{sub.expires_at}</div>
+                        <div>{formatUSDate(sub.expires_at)}</div>
                         <span className="text-[10px] text-slate-400">
-                          Renewal: {sub.renewal_date}
+                          Renewal: {formatUSDate(sub.renewal_date)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

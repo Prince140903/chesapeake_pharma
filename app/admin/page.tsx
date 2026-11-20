@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { formatUSDate } from "@/lib/timezone";
 import {
   Pill,
   Users,
@@ -202,7 +203,7 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-xs text-[#0B2D45]">{request.full_name}</span>
                       <span className="rounded bg-[#EAF7F7] px-2 py-0.5 text-[10px] font-bold text-[#135C70]">
-                        {new Date(request.created_at).toLocaleDateString()}
+                        {formatUSDate(request.created_at)}
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 font-medium">{request.company_name}</p>

@@ -22,8 +22,41 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 import { useAdmin } from "@/components/admin/admin-context";
+import { SearchableSelect } from "@/components/searchable-select";
 import { AdminDrug } from "@/app/admin/drug-actions";
 import { fetchDrugReferencesAction, createReferenceAction, deleteReferenceAction } from "@/app/admin/drug-actions";
+
+type FilterState = {
+  company: string[];
+  route: string[];
+  phase: string[];
+  pharmacology: string[];
+  indication: string[];
+  field: string[];
+  type: string[];
+  device: string[];
+  frequency: string[];
+  volume: string[];
+  date: string[];
+};
+
+// Only records from October 2026 onwards are displayed
+const DATE_FROM = "2026-10";
+
+function formatMonthYear(dateStr: string | undefined | null): string {
+  if (!dateStr) return "—";
+  const yyyymm = dateStr.slice(0, 7);
+  if (!yyyymm || yyyymm.length < 7) return "—";
+  return new Date(yyyymm + "-01").toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function dateKey(dateStr: string | undefined | null): string {
+  if (!dateStr) return "";
+  return dateStr.slice(0, 7);
+}
 
 export default function AdminDrugsPage() {
   const { drugs, addDrug, updateDrug, deleteDrug } = useAdmin();
@@ -32,6 +65,20 @@ export default function AdminDrugsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [phaseFilter, setPhaseFilter] = useState("all");
   const [routeFilter, setRouteFilter] = useState("all");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    company: [],
+    route: [],
+    phase: [],
+    pharmacology: [],
+    indication: [],
+    field: [],
+    type: [],
+    device: [],
+    frequency: [],
+    volume: [],
+    date: [],
+  });
 
   // Modals state
   const [selectedDrug, setSelectedDrug] = useState<AdminDrug | null>(null);
@@ -66,9 +113,122 @@ export default function AdminDrugsPage() {
         if (!matchName && !matchCompany && !matchIndication && !matchDevice) return false;
       }
 
+      // Advanced filters (multi-select supports matching any of the chosen options)
+      const matchesAnyOption = (
+        selectedList: string[],
+        drugValue?: string | null,
+      ) => {
+        if (!selectedList || selectedList.length === 0) return true;
+        if (!drugValue) return false;
+        const valStr = String(drugValue).toLowerCase();
+        return selectedList.some((sel) => valStr.includes(sel.toLowerCase()));
+      };
+
+      if (!matchesAnyOption(filters.company, drug.company)) return false;
+      if (!matchesAnyOption(filters.route, drug.route)) return false;
+      if (!matchesAnyOption(filters.phase, drug.phase)) return false;
+      if (!matchesAnyOption(filters.pharmacology, drug.pharmacology)) return false;
+      if (!matchesAnyOption(filters.indication, drug.indication)) return false;
+      if (!matchesAnyOption(filters.field, drug.field)) return false;
+      if (!matchesAnyOption(filters.type, drug.type)) return false;
+      if (!matchesAnyOption(filters.device, drug.device_formulation)) return false;
+      if (!matchesAnyOption(filters.frequency, drug.frequency)) return false;
+      if (!matchesAnyOption(filters.volume, drug.est_sc_volume_ml)) return false;
+
+      // Date filter: only records from October 2026 onwards (baseline)
+      const drugDateKey = dateKey(drug.entry_date);
+      if (drugDateKey && drugDateKey < DATE_FROM) return false;
+
+      // Date filter: match selected month/year labels (e.g. "Oct 2026")
+      if (filters.date && filters.date.length > 0) {
+        const drugLabel = formatMonthYear(drug.entry_date);
+        if (!filters.date.includes(drugLabel)) return false;
+      }
+
       return true;
     });
-  }, [drugs, activeDataset, phaseFilter, routeFilter, searchQuery]);
+  }, [drugs, activeDataset, phaseFilter, routeFilter, searchQuery, filters]);
+
+  // Compute unique suggestion options for each filter field (scoped to active dataset)
+  const filterOptions = useMemo(() => {
+    const targetPool =
+      activeDataset === "DB1"
+        ? drugs.filter((d) => d.dataset_type === "DB1")
+        : drugs.filter((d) => d.dataset_type === "DB2");
+
+    const getUniqueSorted = (extractor: (d: AdminDrug) => any) => {
+      const set = new Set<string>();
+      targetPool.forEach((d) => {
+        const raw = extractor(d);
+        if (raw !== null && raw !== undefined) {
+          const str = String(raw).trim();
+          if (str && str !== "Not specified" && str !== "Unspecified") {
+            set.add(str);
+          }
+        }
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    };
+
+    return {
+      company: getUniqueSorted((d) => d.company),
+      route: getUniqueSorted((d) => d.route),
+      phase: getUniqueSorted((d) => d.phase),
+      pharmacology: getUniqueSorted((d) => d.pharmacology),
+      indication: getUniqueSorted((d) => d.indication),
+      field: getUniqueSorted((d) => d.field),
+      type: getUniqueSorted((d) => d.type),
+      device: getUniqueSorted((d) => d.device_formulation),
+      frequency: getUniqueSorted((d) => d.frequency),
+      volume: getUniqueSorted((d) => d.est_sc_volume_ml),
+      date: (() => {
+        const map = new Map<string, string>(); // label -> yyyymm
+        targetPool.forEach((d) => {
+          const key = dateKey(d.entry_date);
+          if (key && key >= DATE_FROM) {
+            const label = formatMonthYear(d.entry_date);
+            if (label && label !== "—") map.set(label, key);
+          }
+        });
+        return Array.from(map.entries())
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([label]) => label);
+      })(),
+    };
+  }, [drugs, activeDataset]);
+
+  const hasActiveFilters =
+    Object.values(filters).some((list) => list.length > 0) ||
+    searchQuery !== "" ||
+    phaseFilter !== "all" ||
+    routeFilter !== "all";
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setPhaseFilter("all");
+    setRouteFilter("all");
+    setFilters({
+      company: [],
+      route: [],
+      phase: [],
+      pharmacology: [],
+      indication: [],
+      field: [],
+    type: [],
+    device: [],
+    frequency: [],
+    volume: [],
+    date: [],
+  });
+    setCurrentPage(1);
+  };
+
+  const updateFilter = (key: keyof FilterState, values: string[]) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: values,
+    }));
+    setCurrentPage(1);
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredDrugs.length / pageSize));
   const paginatedDrugs = filteredDrugs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -303,11 +463,147 @@ export default function AdminDrugsPage() {
             <option value="Registration">Under FDA Review / Registration</option>
           </select>
 
+          <select
+            value={routeFilter}
+            onChange={(e) => {
+              setRouteFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-lg border border-[#DCE6EB] bg-white px-3 py-2 text-xs font-medium text-[#0B2D45] focus:border-[#42B7B9]"
+          >
+            <option value="all">All Routes</option>
+            <option value="Subcutaneous">Subcutaneous</option>
+            <option value="Subcutaneous Injectable">Subcutaneous Injectable</option>
+            <option value="Intravenous">Intravenous</option>
+            <option value="Intramuscular">Intramuscular</option>
+            <option value="Oral">Oral</option>
+          </select>
+
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 rounded-lg border border-[#DCE6EB] bg-[#F5F8FA] px-3 py-2 text-xs font-medium text-[#0B2D45] hover:bg-[#EAF7F7] transition"
+          >
+            <Filter size={14} />
+            <span>Advanced Filters</span>
+          </button>
+
           <span className="text-xs text-slate-400 font-semibold pl-2">
             {filteredDrugs.length} matching {activeDataset} records
           </span>
         </div>
       </div>
+
+      {showAdvanced && (
+        <div className="rounded-b-xl border border-t-0 border-[#DCE6EB] bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#0B2D45]">
+              Advanced Filters
+            </h3>
+            <span className="text-[10px] text-muted">
+              Type or pick from suggestions
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <SearchableSelect
+              label="Company"
+              placeholder="Search company"
+              selectedValues={filters.company}
+              options={filterOptions.company}
+              onChange={(vals) => updateFilter("company", vals)}
+            />
+
+            <SearchableSelect
+              label="Route"
+              placeholder="Search route"
+              selectedValues={filters.route}
+              options={filterOptions.route}
+              onChange={(vals) => updateFilter("route", vals)}
+            />
+
+            <SearchableSelect
+              label="Phase"
+              placeholder="Search phase"
+              selectedValues={filters.phase}
+              options={filterOptions.phase}
+              onChange={(vals) => updateFilter("phase", vals)}
+            />
+
+            <SearchableSelect
+              label="Pharmacology"
+              placeholder="Search pharmacology"
+              selectedValues={filters.pharmacology}
+              options={filterOptions.pharmacology}
+              onChange={(vals) => updateFilter("pharmacology", vals)}
+            />
+
+            <SearchableSelect
+              label="Indication"
+              placeholder="Search indication"
+              selectedValues={filters.indication}
+              options={filterOptions.indication}
+              onChange={(vals) => updateFilter("indication", vals)}
+            />
+
+            <SearchableSelect
+              label="Therapy Area (Field)"
+              placeholder="Search therapy"
+              selectedValues={filters.field}
+              options={filterOptions.field}
+              onChange={(vals) => updateFilter("field", vals)}
+            />
+
+            <SearchableSelect
+              label="Type"
+              placeholder="Search type"
+              selectedValues={filters.type}
+              options={filterOptions.type}
+              onChange={(vals) => updateFilter("type", vals)}
+            />
+
+            <SearchableSelect
+              label="Device / Formulation"
+              placeholder="Search device"
+              selectedValues={filters.device}
+              options={filterOptions.device}
+              onChange={(vals) => updateFilter("device", vals)}
+            />
+
+            <SearchableSelect
+              label="Frequency"
+              placeholder="Search frequency"
+              selectedValues={filters.frequency}
+              options={filterOptions.frequency}
+              onChange={(vals) => updateFilter("frequency", vals)}
+            />
+
+            <SearchableSelect
+              label="Est SC Volume (mL)"
+              placeholder="Search volume"
+              selectedValues={filters.volume}
+              options={filterOptions.volume}
+              onChange={(vals) => updateFilter("volume", vals)}
+            />
+
+            <SearchableSelect
+              label="Date (Month / Year)"
+              placeholder="Search date"
+              selectedValues={filters.date}
+              options={filterOptions.date}
+              onChange={(vals) => updateFilter("date", vals)}
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={handleResetFilters}
+              className="mt-3 flex items-center gap-2 text-xs text-[#42B7B9] hover:text-[#0B3B48]"
+            >
+              <X size={13} />
+              Clear all filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Drugs Table */}
       <div className="overflow-hidden rounded-xl border border-[#DCE6EB] bg-white shadow-card">
@@ -325,13 +621,14 @@ export default function AdminDrugsPage() {
                 </th>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Phase</th>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">Indication</th>
+                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px] text-right">Date</th>
                 <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#DCE6EB]">
               {paginatedDrugs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                     No {activeDataset} drug records match the current filters.
                   </td>
                 </tr>
@@ -373,6 +670,9 @@ export default function AdminDrugsPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600 max-w-[180px] truncate" title={drug.indication}>
                       {drug.indication}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-right" title={drug.entry_date}>
+                      {drug.entry_date}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">

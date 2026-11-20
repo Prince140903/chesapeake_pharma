@@ -27,7 +27,25 @@ type FilterState = {
   frequency: string[];
   device: string[];
   company: string[];
+  date: string[];
 };
+
+const DATE_FROM = "2026-10";
+
+function formatMonthYear(dateStr: string | undefined | null): string {
+  if (!dateStr) return "—";
+  const yyyymm = dateStr.slice(0, 7);
+  if (!yyyymm || yyyymm.length < 7) return "—";
+  return new Date(yyyymm + "-01").toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function dateKey(dateStr: string | undefined | null): string {
+  if (!dateStr) return "";
+  return dateStr.slice(0, 7);
+}
 
 const ITEMS_PER_PAGE = 10;
 
@@ -47,6 +65,7 @@ export default function PortalPage() {
     frequency: [],
     device: [],
     company: [],
+    date: [],
   });
   const [activeDataset, setActiveDataset] = useState<"All" | "DB1" | "DB2">(
     "All",
@@ -135,6 +154,19 @@ export default function PortalPage() {
       frequency: getUniqueSorted((d) => d.frequency),
       device: getUniqueSorted((d) => d.device),
       company: getUniqueSorted((d) => d.company),
+      date: (() => {
+        const map = new Map<string, string>();
+        targetPool.forEach((d) => {
+          const key = dateKey(d.entryDate);
+          if (key && key >= DATE_FROM) {
+            const label = formatMonthYear(d.entryDate);
+            if (label && label !== "—") map.set(label, key);
+          }
+        });
+        return Array.from(map.entries())
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([label]) => label);
+      })(),
     };
   }, [drugs, activeDataset]);
 
@@ -200,6 +232,16 @@ export default function PortalPage() {
         return false;
       }
 
+      // Date filter: only records from October 2026 onwards (baseline)
+      const drugDateKey = dateKey(drug.entryDate);
+      if (drugDateKey && drugDateKey < DATE_FROM) return false;
+
+      // Date filter: match selected month/year labels (e.g. "Oct 2026")
+      if (filters.date && filters.date.length > 0) {
+        const drugLabel = formatMonthYear(drug.entryDate);
+        if (!filters.date.includes(drugLabel)) return false;
+      }
+
       return true;
     });
   }, [searchTerm, filters, activeDataset, drugs]);
@@ -227,6 +269,7 @@ export default function PortalPage() {
       frequency: [],
       device: [],
       company: [],
+      date: [],
     });
     setCurrentPage(1);
   };
@@ -439,6 +482,14 @@ export default function PortalPage() {
                   selectedValues={filters.company}
                   options={filterOptions.company}
                   onChange={(vals) => updateFilter("company", vals)}
+                />
+
+                <SearchableSelect
+                  label="Date (Month / Year)"
+                  placeholder="Search date"
+                  selectedValues={filters.date}
+                  options={filterOptions.date}
+                  onChange={(vals) => updateFilter("date", vals)}
                 />
               </div>
 

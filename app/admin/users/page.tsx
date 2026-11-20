@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { formatUSDate, formatUSDateTime } from "@/lib/timezone";
 import {
   Users,
   Search,
@@ -243,7 +244,7 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-[11px]">
-                      {new Date(request.created_at).toLocaleDateString()}
+                      {formatUSDate(request.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -352,7 +353,7 @@ export default function AdminUsersPage() {
               <div className="rounded-lg bg-[#F5F8FA] p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-400">Submitted Date</p>
                 <p className="mt-1 font-bold text-[#0B2D45]">
-                  {new Date(selectedRequest.created_at).toLocaleString()}
+                  {formatUSDateTime(selectedRequest.created_at)}
                 </p>
               </div>
 
@@ -364,7 +365,7 @@ export default function AdminUsersPage() {
                   </p>
                   {selectedRequest.approved_at && (
                     <p className="text-[11px] text-emerald-600 mt-1">
-                      Approved on {new Date(selectedRequest.approved_at).toLocaleString()}
+                      Approved on {formatUSDateTime(selectedRequest.approved_at)}
                     </p>
                   )}
                 </div>
@@ -376,7 +377,7 @@ export default function AdminUsersPage() {
                   <p className="mt-1 text-rose-900">{selectedRequest.admin_notes || "No reason provided"}</p>
                   {selectedRequest.rejected_at && (
                     <p className="text-[11px] text-rose-600 mt-1">
-                      Rejected on {new Date(selectedRequest.rejected_at).toLocaleString()}
+                      Rejected on {formatUSDateTime(selectedRequest.rejected_at)}
                     </p>
                   )}
                 </div>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { formatUSDate, formatUSTime } from "@/lib/timezone";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,8 +30,8 @@ export async function POST(request: NextRequest) {
             user_email: requestData.email,
             company_name: requestData.company_name,
             request_id: requestId,
-            submission_date: new Date().toLocaleDateString(),
-            submission_time: new Date().toLocaleTimeString()
+            submission_date: formatUSDate(new Date().toISOString()),
+            submission_time: formatUSTime(new Date().toISOString())
           }
         })
       });
@@ -75,8 +76,8 @@ export async function POST(request: NextRequest) {
             databases: databases === "both" ? "DB1 and DB2" : databases,
             password: password,
             login_link: loginLink,
-            start_date: start.toLocaleDateString(),
-            end_date: end.toLocaleDateString(),
+            start_date: formatUSDate(startDate),
+            end_date: formatUSDate(endDate),
             duration_days: duration,
             admin_email: process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@chesapeakepharma.com"
           }
