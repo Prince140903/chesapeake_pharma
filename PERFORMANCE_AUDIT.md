@@ -42,7 +42,6 @@ A comprehensive, read-only performance and architectural audit of the Chesapeake
   - `public/assets/monoclonal antibodies 1.png` (7.56 MB)
   - `public/assets/nucleic acids 1.png` (7.23 MB)
   - `app/(marketing)/page.tsx`
-  - `app/(marketing)/services/page.tsx`
 - **Problem:** Several marketing graphics deployed in `public/assets` exceed 7 MB each. If loaded, a single user visit pulls down over 22 MB of uncompressed raster PNG data.
 - **Impact:** Drastic drop in Google Lighthouse Performance score (< 30), severe Largest Contentful Paint (LCP) delays (> 6-10s on 4G networks), high bandwidth consumption, and page jank.
 - **Root cause:** Raw high-resolution production art files (PNG-24) placed directly in the static public folder without WebP/AVIF modern compression or downscaling.

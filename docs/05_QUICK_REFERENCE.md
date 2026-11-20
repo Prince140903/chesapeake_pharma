@@ -19,7 +19,6 @@ Print this page for quick lookup while testing!
 |------|-----|-----------|
 | Home | `/` | Main landing page |
 | About | `/about` | Company information |
-| Services | `/services` | What we offer |
 | Leadership | `/leadership` | Team info |
 | Drug Insights | `/drug-insights` | Industry intel |
 | Clients | `/clients` | Client logos |

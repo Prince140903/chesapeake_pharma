@@ -8,10 +8,10 @@ export interface HeroContent {
   description: string;
   primary_btn_text: string;
   primary_btn_link: string;
-  secondary_btn_text: string;
-  secondary_btn_link: string;
   banner_image: string;
   banner_image_alt: string;
+  banner_images?: string[];
+  citation?: string;
 }
 
 export interface StrategicLeadershipContent {
@@ -38,6 +38,7 @@ export interface ServiceItem {
   title: string;
   description: string;
   icon: string;
+  points?: string[];
 }
 
 export interface FocusedAreaItem {
@@ -54,6 +55,13 @@ export interface TestimonialItem {
   attribution: string;
 }
 
+export interface ExpertiseSectionContent {
+  title: string;
+  badge: string;
+  lead_text: string;
+  slider_images: string[];
+}
+
 export interface HomePageContent {
   hero: HeroContent;
   strategic_leadership: StrategicLeadershipContent;
@@ -61,6 +69,7 @@ export interface HomePageContent {
   services_list: ServiceItem[];
   focused_areas: FocusedAreaItem[];
   testimonials: TestimonialItem[];
+  expertise_section?: ExpertiseSectionContent;
 }
 
 export interface OperatingPrinciple {
@@ -124,24 +133,29 @@ export const defaultHomePageContent: HomePageContent = {
   hero: {
     badge: "Drug Delivery Advisory",
     title_line1: "CHESAPEAKE PHARMA:",
-    title_highlight: "DELIVERING STRATEGIC DRUG",
-    title_line2: "INSIGHTS & DELIVERY",
-    title_line3: "TECHNOLOGY",
-    title_line4: "COMMERCIALIZATION",
+    title_highlight: "STRATEGIC DRUG DELIVERY",
+    title_line2: "AND PHARMACEUTICAL",
+    title_line3: "PIPELINE INSIGHTS",
+    title_line4: "",
     description:
       "Expert guidance on combination products, novel injectables, and IV-to-subcutaneous transitions to derisk pharmaceutical pipeline investments.",
     primary_btn_text: "SCHEDULE A CONSULTATION",
     primary_btn_link: "/contact",
-    secondary_btn_text: "Explore Key Services",
-    secondary_btn_link: "/services",
     banner_image: "/assets/banner.png",
-    banner_image_alt: "Dr. Philip Green in biotechnology consulting laboratory"
+    banner_image_alt: "Chesapeake Pharma consulting banner",
+    banner_images: [
+      "/assets/banner.png",
+      "/assets/docx_images/image2.png",
+      "/assets/docx_images/image3.png"
+    ],
+    citation:
+      "*From: Lyness A, Burke J. Investigating imaging modalities to characterize injection deposition for LVSC device design. PDA Universe of Pre-Filled Syringes and Injection Devices; 2026 Oct 6-7; Palm Springs, CA, USA."
   },
   strategic_leadership: {
     title: "Advancing Drug Delivery & Biologics Commercialization",
     subtitle: "Strategic guidance for novel drug-device combination products, injectables, and portfolio evolution",
     paragraph1:
-      "With over three decades of leadership across global pharma and medical technology—including executive roles at Merck, Becton-Dickinson, and Novartis—Chesapeake Pharma under the leadership of Phil provides high-impact commercial and strategic advisory services to pharmaceutical innovators and drug delivery developers.",
+      "With over four decades of experience across global pharma and medical technology—including executive roles at Merck, Becton-Dickinson, and Novartis (Zyma SA)—Chesapeake Pharma under the leadership of Dr Phil Green provides commercial and strategic advisory services to pharmaceutical innovators and drug delivery developers.",
     paragraph2:
       "Backed by a doctoral foundation in pharmaceutical chemistry, he specializes in translating complex drug-device technologies into viable market leaders, offering deep expertise in combination product positioning, competitive intelligence, and IV-to-subcutaneous formulation transitions that optimize emerging pipelines and elevate patient-centric care.",
     image: "/assets/Picture1.png",
@@ -152,37 +166,58 @@ export const defaultHomePageContent: HomePageContent = {
     role_badge: "President",
     title_subtitle: "President & Founder, Chesapeake Pharma LLC · Weehawken, NJ, USA",
     paragraph1:
-      "Dr. Green has a distinguished career specializing in the commercialization of drug delivery technologies, spanning commercial strategy and market positioning of combination products, novel injectables, and IV-to-subcutaneous transitions. Currently, he consults with leading pharmaceutical and biotech companies on commercial strategy, business development, and pipeline optimization.",
+      "Dr. Green specializes in the commercialization of drug delivery technologies, spanning commercial strategy and market positioning of combination products including novel injectables, and high dose/large volume subcutaneous products. Currently, he consults with leading biopharmaceutical companies, packaging and drug delivery companies, on commercial strategies, business development, competitive intelligence, and trend analysis of emerging pharma pipelines.",
     paragraph2:
-      "Previously, Dr. Green served as Executive Director of Biologics Device Strategy at Merck US (where he led Keytruda SubQ formulation marketing), and spent 16 years at Becton-Dickinson directing advanced delivery initiatives (transdermal, microneedle, and high-volume subcutaneous pumps). He holds a PhD in Pharmaceutical Chemistry from Cardiff University and completed post-doctoral training at the University of California, San Francisco (UCSF).",
+      "Previously Dr Green served as Executive Director of Biologics Device Strategy at Merck US. In this role, he developed and executed commercial device strategies for multiple launched biosimilar and oncology-focused combination products, including leading commercial efforts for a new SC formulation of the anti-cancer agent Pembrolizumab (Keytruda®). Before Merck, Phil spent 16 years at Becton-Dickinson, where he led advanced delivery technology initiatives, forming key partnerships with pharmaceutical companies. His work focused on technologies such as transdermal, intradermal, microneedle delivery systems, high-volume subcutaneous pumps, and various self-injection devices. Prior to Becton-Dickinson, Phil held several roles within transdermal and topical drug delivery at Novartis (Zyma) and L’Oréal/Galderma. Dr Green holds a BSc in Chemistry and an MSc in Medical Sciences from Bristol University (UK), a PhD in Pharmaceutical Chemistry from University of Wales, Cardiff (Welsh School of Pharmacy), and completed his post-doctoral training at the University of California, San Francisco.",
     image: "/assets/image.png",
     image_alt: "Philip Green, Ph.D. — President, Chesapeake Pharma",
     badge_text: "Verified Biopharma Executive"
   },
+  expertise_section: {
+    title: "EXPERTISE",
+    badge: "Key Services",
+    lead_text:
+      "With over four decades of experience across global pharma and medical technology—including executive roles at Merck, Becton-Dickinson, and Novartis (Zyma SA)—Chesapeake Pharma under the leadership of Dr Phil Green provides commercial and strategic advisory services to pharmaceutical innovators and drug delivery developers.",
+    slider_images: [
+      "/assets/docx_images/image6.png",
+      "/assets/docx_images/image7.jpeg",
+      "/assets/docx_images/image8.png",
+      "/assets/docx_images/image9.png",
+      "/assets/docx_images/image5.png"
+    ]
+  },
   services_list: [
     {
-      title: "Commercial\nStrategy",
+      title: "Strategic Guidance",
       description:
-        "Frame delivery choices around market needs, physician adoption, competitive differentiation, and practical payer positioning.",
-      icon: "CommercialStrategy"
+        "Commercial and technological guidance across complex drug/device combination systems and novel skin-based formulations.",
+      icon: "CommercialStrategy",
+      points: [
+        "Drug/device combination products",
+        "High dose/large volume subcutaneous delivery",
+        "Novel injectable and skin-based delivery technologies"
+      ]
     },
     {
-      title: "Drug Delivery\nAssessment",
+      title: "Business Development",
       description:
-        "Evaluate route, device, autoinjector, and large-volume formulation compatibility to select optimal combination systems.",
-      icon: "DrugDelivery"
+        "Actionable partnership opportunities, matching molecules to delivery platforms, and comprehensive commercial forecasting.",
+      icon: "BusinessDev",
+      points: [
+        "Opportunity assessment (matching drugs to devices)",
+        "High level commercial forecasting",
+        "Deal structuring"
+      ]
     },
     {
-      title: "Business\nDevelopment",
+      title: "Pharmaceutical Pipeline Assessments",
       description:
-        "Translate technical delivery signals into strategic partnership structures, licensing agreements, and co-development terms.",
-      icon: "BusinessDev"
-    },
-    {
-      title: "Competitive\nIntelligence",
-      description:
-        "Continuously monitor competing drug delivery technologies, patent landscapes, formulation patents, and competitor pipeline milestones.",
-      icon: "CompetitiveIntel"
+        "Rigorous intelligence and trend monitoring across global developmental biopharmaceutical pipelines.",
+      icon: "CompetitiveIntel",
+      points: [
+        "Identification of key emerging trends",
+        "Competitive Intelligence."
+      ]
     }
   ],
   focused_areas: [

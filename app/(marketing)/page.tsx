@@ -3,15 +3,13 @@ import Image from "next/image";
 import { ArrowRight, FileText, CheckCircle2 } from "lucide-react";
 import { TealWedge } from "@/components/ui";
 import {
-  CommercialStrategyIcon,
-  DrugDeliveryIcon,
-  BusinessDevIcon,
-  CompetitiveIntelIcon,
   MerckLogoBadge,
   NovartisLogoBadge,
 } from "@/components/reference-icons";
 import { getSiteContentAction } from "@/app/admin/content-actions";
 import { HomePageContent, defaultHomePageContent } from "@/lib/content-schema";
+import { HeroBannerSlider } from "@/components/hero-banner-slider";
+import { ServicesExpertiseSection } from "@/components/services-expertise-section";
 
 export const revalidate = 0; // Dynamic route
 
@@ -25,21 +23,7 @@ export default async function HomePage() {
   const services = content.services_list || defaultHomePageContent.services_list;
   const focusAreas = content.focused_areas || defaultHomePageContent.focused_areas;
   const testimonials = content.testimonials || defaultHomePageContent.testimonials;
-
-  // Helper to map icon identifier string to component
-  const renderServiceIcon = (iconName: string) => {
-    switch (iconName) {
-      case "DrugDelivery":
-        return <DrugDeliveryIcon className="w-7 h-7" />;
-      case "BusinessDev":
-        return <BusinessDevIcon className="w-7 h-7" />;
-      case "CompetitiveIntel":
-        return <CompetitiveIntelIcon className="w-7 h-7" />;
-      case "CommercialStrategy":
-      default:
-        return <CommercialStrategyIcon className="w-7 h-7" />;
-    }
-  };
+  const expertise = content.expertise_section || defaultHomePageContent.expertise_section;
 
   // Helper to render logo badge
   const renderLogoBadge = (logo: string) => {
@@ -53,126 +37,92 @@ export default async function HomePage() {
     <div className="w-full bg-[#F5F8FA] pb-16 pt-6 sm:pt-8 lg:pt-10 space-y-12 sm:space-y-16 lg:space-y-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 lg:space-y-20">
         {/* ========================================================
-            1. HERO SECTION - Full Image with Text Overlay
+            1. HERO SECTION - Image Slider Component with Content Overlay
+           ======================================================== */}
+        <HeroBannerSlider hero={hero} />
+
+        {/* ========================================================
+            2. EXPERTISE & KEY SERVICES SECTION (Unified)
+               Includes lead expertise narrative, responsive image slider (1-2 on mobile, 3-4 on desktop),
+               and the 3 Key Service areas specified in revisions doc
+           ======================================================== */}
+        <ServicesExpertiseSection expertise={expertise} services={services} />
+
+        {/* ========================================================
+            3. FOCUSED AREAS (Therapeutic Modalities)
            ======================================================== */}
         <section
-          aria-label="Chesapeake Pharma Overview"
-          className="rounded-2xl lg:rounded-3xl overflow-hidden border border-[#CDE5E7] shadow-[0_12px_40px_rgba(11,45,69,0.06)]"
+          aria-label="Focused Modalities"
+          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
         >
-          <div className="relative w-full min-h-[420px] sm:min-h-[480px] xl:min-h-[540px] overflow-hidden">
-            {/* Background Image */}
-            <Image
-              src={hero.banner_image || "/assets/banner.png"}
-              alt={hero.banner_image_alt || "Chesapeake Pharma consulting banner"}
-              fill
-              priority
-              sizes="100vw"
-              className="object-contain object-center"
-            />
+          {/* Section Header */}
+          {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6EFF1]">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
+                FOCUSED AREAS
+              </h2>
+              <TealWedge className="w-10 h-3" />
+            </div>
+            <p className="text-xs sm:text-sm text-[#476375] font-medium">
+              Target therapeutic modalities driving high-volume delivery and
+              formulation transitions
+            </p>
+          </div> */}
 
-            {/* Gradient Overlay - Blue on left, fades to transparent on right */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0B2D45]/85 via-[#0B2D45]/55 to-transparent" />
-
-            {/* Text Content - Positioned on top */}
-            <div className="absolute inset-0 flex flex-col justify-between p-7 sm:p-10 xl:p-14">
-              <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/30 text-white text-[11px] font-bold uppercase tracking-widest shadow-xs mb-5 backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-[#62D4DB] animate-pulse" />
-                  {hero.badge || "Drug Delivery Advisory"}
+          {/* Modality Focus Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {focusAreas.map((card, idx) => (
+              <div
+                key={idx}
+                className="rounded-xl bg-[#F7FCFD] border border-[#D5E7EA] overflow-hidden flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group"
+              >
+                <div>
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
+                    <Image
+                      src={card.image || "/assets/monoclonal antibodies 1.png"}
+                      alt={card.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/40 via-transparent to-transparent" />
+                    <span className="absolute top-3 left-3 rounded-md bg-[#0B2D45]/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                      {card.tag}
+                    </span>
+                  </div>
+                  {/* <div className="p-5 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-bold text-[#0B2D45] tracking-tight group-hover:text-[#135C70] transition-colors">
+                      {card.title}
+                    </h3>
+                    <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
+                      {card.description}
+                    </p>
+                  </div> */}
                 </div>
-
-                <h1 className="text-2xl sm:text-3xl xl:text-[38px] font-extrabold uppercase leading-[1.18] tracking-tight text-white">
-                  {hero.title_line1}
-                  <br />
-                  <span className="text-[#62D4DB]">
-                    {hero.title_highlight}
+                {/* <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-1">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#135C70]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#289CA0]" />
+                    {card.footer}
                   </span>
-                  <br />
-                  {hero.title_line2}
-                  {hero.title_line3 && (
-                    <>
-                      <br />
-                      {hero.title_line3}
-                    </>
-                  )}
-                  {hero.title_line4 && (
-                    <>
-                      <br />
-                      {hero.title_line4}
-                    </>
-                  )}
-                </h1>
-
-                <p className="mt-5 text-sm sm:text-base leading-relaxed text-white/90 max-w-xl font-normal">
-                  {hero.description}
-                </p>
+                </div> */}
               </div>
+            ))}
+          </div>
 
-              <div className="flex flex-wrap items-center gap-4 pt-4">
-                <Link
-                  href={hero.primary_btn_link || "/contact"}
-                  className="focus-ring inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-6 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-white shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] group"
-                >
-                  <span>{hero.primary_btn_text || "SCHEDULE A CONSULTATION"}</span>
-                  <ArrowRight
-                    size={16}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                </Link>
-
-                <Link
-                  href={hero.secondary_btn_link || "/services"}
-                  className="focus-ring inline-flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 border border-white/40 backdrop-blur-sm px-5 py-3.5 text-xs sm:text-sm font-semibold text-white transition-all hover:border-white/60"
-                >
-                  {hero.secondary_btn_text || "Explore Key Services"}
-                </Link>
-              </div>
-            </div>
+          {/* AI Disclaimer Footnote */}
+          <div className="mt-8 pt-4 border-t border-[#E6EFF1] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#718898]">
+            <p className="italic">
+              * Note: The molecular and cellular images above were generated
+              using AI for representational purposes only.
+            </p>
+            <span className="font-semibold text-[#135C70]">
+              Chesapeake Pharma Technical Focus
+            </span>
           </div>
         </section>
 
         {/* ========================================================
-            2. STRATEGIC LEADERSHIP SECTION - Image Left, Content Right
-           ======================================================== */}
-        <section
-          aria-label="Strategic Leadership & Experience"
-          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-0 overflow-hidden shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px] sm:min-h-[550px]">
-            {/* Left Side - Image */}
-            <div className="relative bg-gradient-to-b from-[#EBF6F8] to-[#D5EEF2] min-h-[350px] lg:min-h-full flex items-center justify-center p-6 sm:p-8 order-2 lg:order-1">
-              <Image
-                src={strat.image || "/assets/Picture1.png"}
-                alt={strat.image_alt || "Advancing drug delivery and biologics commercialization"}
-                fill
-                sizes=""
-                className="object-contain object-center w-[50%]"
-              />
-            </div>
-
-            {/* Right Side - Content */}
-            <div className="p-7 sm:p-10 xl:p-14 flex flex-col justify-between bg-white order-1 lg:order-2">
-              {/* Header */}
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0B2D45] tracking-tight mb-4">
-                  {strat.title}
-                </h2>
-                <p className="text-sm sm:text-base text-[#476375] font-medium leading-relaxed mb-6">
-                  {strat.subtitle}
-                </p>
-
-                {/* Main Description */}
-                <div className="space-y-4 text-sm sm:text-[15px] leading-relaxed text-[#3D5668]">
-                  <p>{strat.paragraph1}</p>
-                  <p>{strat.paragraph2}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================
-            3. ABOUT OUR LEADERSHIP SECTION (Directly under Hero)
+            4. ABOUT OUR LEADERSHIP SECTION
            ======================================================== */}
         <section
           aria-label="About Our Leadership"
@@ -249,136 +199,10 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ========================================================
-            4. KEY SERVICES SECTION
-           ======================================================== */}
-        <section
-          aria-label="Key Services"
-          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-[#EEF8FA] p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
-        >
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#D8ECF0]">
-            <div className="flex items-center gap-3">
-              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
-                KEY SERVICES
-              </h2>
-              <TealWedge className="w-10 h-3" />
-            </div>
-            <p className="text-xs sm:text-sm text-[#476375] font-medium">
-              Four specialized pillars of drug delivery commercial advisory
-            </p>
-          </div>
-
-          {/* 4 Polished Services Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {services.map((svc, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl bg-white border border-[#D0E6E8] p-6 flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group"
-              >
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-[#E8F6F8] flex items-center justify-center border border-[#CFE8EA] group-hover:scale-105 transition-transform">
-                    {renderServiceIcon(svc.icon)}
-                  </div>
-                  <h3 className="mt-5 text-sm sm:text-base font-bold uppercase tracking-tight text-[#0B2D45] leading-snug whitespace-pre-line">
-                    {svc.title}
-                  </h3>
-                  <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                    {svc.description}
-                  </p>
-                </div>
-                <div className="mt-6 pt-3 border-t border-line/60">
-                  <Link
-                    href="/services"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#135C70] group-hover:text-[#289CA0] transition"
-                  >
-                    <span>Learn more</span>
-                    <ArrowRight
-                      size={13}
-                      className="transition-transform group-hover:translate-x-1"
-                    />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        
 
         {/* ========================================================
-            5. FOCUSED AREAS
-           ======================================================== */}
-        <section
-          aria-label="Focused Areas"
-          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
-        >
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6EFF1]">
-            <div className="flex items-center gap-3">
-              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
-                EXPERTISE
-              </h2>
-              <TealWedge className="w-10 h-3" />
-            </div>
-            <p className="text-xs sm:text-sm text-[#476375] font-medium">
-              Target therapeutic modalities driving high-volume delivery and
-              formulation transitions
-            </p>
-          </div>
-
-          {/* Modality Focus Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {focusAreas.map((card, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl bg-[#F7FCFD] border border-[#D5E7EA] overflow-hidden flex flex-col justify-between hover:border-[#289CA0] hover:shadow-md transition-all duration-300 group"
-              >
-                <div>
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
-                    <Image
-                      src={card.image || "/assets/monoclonal antibodies 1.png"}
-                      alt={card.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B2D45]/40 via-transparent to-transparent" />
-                    <span className="absolute top-3 left-3 rounded-md bg-[#0B2D45]/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                      {card.tag}
-                    </span>
-                  </div>
-                  <div className="p-5 sm:p-6">
-                    <h3 className="text-base sm:text-lg font-bold text-[#0B2D45] tracking-tight group-hover:text-[#135C70] transition-colors">
-                      {card.title}
-                    </h3>
-                    <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#516C7D]">
-                      {card.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-1">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#135C70]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#289CA0]" />
-                    {card.footer}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* AI Disclaimer Footnote */}
-          <div className="mt-8 pt-4 border-t border-[#E6EFF1] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#718898]">
-            <p className="italic">
-              * Note: The molecular and cellular images above were generated
-              using AI for representational purposes only.
-            </p>
-            <span className="font-semibold text-[#135C70]">
-              Chesapeake Pharma Technical Focus
-            </span>
-          </div>
-        </section>
-
-        {/* ========================================================
-            6. TESTIMONIALS & TRUSTED BY
+           5. TESTIMONIALS & TRUSTED BY
            ======================================================== */}
         <section
           aria-label="Testimonials and Trusted By"

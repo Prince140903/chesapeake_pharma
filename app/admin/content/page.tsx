@@ -35,6 +35,8 @@ import {
   updatePublicationAction,
   deletePublicationAction
 } from "@/app/admin/content-actions";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { MultiImageUploadField } from "@/components/admin/multi-image-upload-field";
 
 type TabKey = "home" | "publications" | "about" | "contact";
 
@@ -288,15 +290,52 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Background Image URL</label>
+                <ImageUploadField
+                  label="Primary Background Image"
+                  value={homeData.hero?.banner_image || ""}
+                  onChange={(url) =>
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, banner_image: url }
+                    })
+                  }
+                  placeholder="/assets/banner.png or https://...supabase.co/..."
+                  hint="Enter URL or upload a file directly to Supabase Storage"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <MultiImageUploadField
+                  label="Banner Slider Images Sequence"
+                  images={
+                    homeData.hero?.banner_images && homeData.hero.banner_images.length > 0
+                      ? homeData.hero.banner_images
+                      : [homeData.hero?.banner_image || "/assets/banner.png"]
+                  }
+                  onChange={(imgs) =>
+                    setHomeData({
+                      ...homeData,
+                      hero: {
+                        ...homeData.hero,
+                        banner_images: imgs,
+                        banner_image: imgs[0] || homeData.hero?.banner_image || ""
+                      }
+                    })
+                  }
+                  hint="Upload multiple images to Supabase Storage to display an image sequence in the hero banner slider."
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-[#163449] mb-1">Citation / Reference Footnote (Optional)</label>
                 <input
                   type="text"
-                  value={homeData.hero?.banner_image || ""}
+                  value={homeData.hero?.citation || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, banner_image: e.target.value } })
+                    setHomeData({ ...homeData, hero: { ...homeData.hero, citation: e.target.value } })
                   }
-                  placeholder="/assets/banner.png or https://..."
-                  className="input-control text-xs font-mono"
+                  placeholder="*From: Lyness A, Burke J..."
+                  className="input-control text-xs"
                 />
               </div>
 
@@ -386,11 +425,11 @@ export default function AdminContentPage() {
             </div>
           </div>
 
-          {/* Strategic Leadership Section */}
+          {/* Unified Expertise & Key Services Section */}
           <div className="rounded-xl border border-[#DCE6EB] bg-white p-6 shadow-sm space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-[#0B2D45] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#289CA0]" />
-              Strategic Leadership Section (Left Image / Right Copy)
+              Expertise & Key Services (Merged Unified Section)
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -398,11 +437,14 @@ export default function AdminContentPage() {
                 <label className="block text-xs font-semibold text-[#163449] mb-1">Section Title</label>
                 <input
                   type="text"
-                  value={homeData.strategic_leadership?.title || ""}
+                  value={homeData.expertise_section?.title || "EXPERTISE"}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      strategic_leadership: { ...homeData.strategic_leadership, title: e.target.value }
+                      expertise_section: {
+                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
+                        title: e.target.value
+                      }
                     })
                   }
                   className="input-control text-xs"
@@ -410,29 +452,17 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Image URL</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">Badge</label>
                 <input
                   type="text"
-                  value={homeData.strategic_leadership?.image || ""}
+                  value={homeData.expertise_section?.badge || "Key Services"}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      strategic_leadership: { ...homeData.strategic_leadership, image: e.target.value }
-                    })
-                  }
-                  className="input-control text-xs font-mono"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Subtitle</label>
-                <input
-                  type="text"
-                  value={homeData.strategic_leadership?.subtitle || ""}
-                  onChange={(e) =>
-                    setHomeData({
-                      ...homeData,
-                      strategic_leadership: { ...homeData.strategic_leadership, subtitle: e.target.value }
+                      expertise_section: {
+                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
+                        badge: e.target.value
+                      }
                     })
                   }
                   className="input-control text-xs"
@@ -440,14 +470,17 @@ export default function AdminContentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Paragraph 1</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">Lead Narrative Text</label>
                 <textarea
                   rows={3}
-                  value={homeData.strategic_leadership?.paragraph1 || ""}
+                  value={homeData.expertise_section?.lead_text || ""}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      strategic_leadership: { ...homeData.strategic_leadership, paragraph1: e.target.value }
+                      expertise_section: {
+                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
+                        lead_text: e.target.value
+                      }
                     })
                   }
                   className="input-control text-xs"
@@ -455,18 +488,92 @@ export default function AdminContentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Paragraph 2</label>
-                <textarea
-                  rows={3}
-                  value={homeData.strategic_leadership?.paragraph2 || ""}
-                  onChange={(e) =>
+                <MultiImageUploadField
+                  label="Section Slider Images (Delivery Devices & Clinical Imaging Modalities)"
+                  images={
+                    homeData.expertise_section?.slider_images && homeData.expertise_section.slider_images.length > 0
+                      ? homeData.expertise_section.slider_images
+                      : [
+                          "/assets/docx_images/image6.png",
+                          "/assets/docx_images/image7.jpeg",
+                          "/assets/docx_images/image8.png",
+                          "/assets/docx_images/image9.png",
+                          "/assets/docx_images/image5.png"
+                        ]
+                  }
+                  onChange={(imgs) =>
                     setHomeData({
                       ...homeData,
-                      strategic_leadership: { ...homeData.strategic_leadership, paragraph2: e.target.value }
+                      expertise_section: {
+                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
+                        slider_images: imgs
+                      }
                     })
                   }
-                  className="input-control text-xs"
+                  hint="Upload images directly to Supabase Storage or edit URLs. Responsive slider shows 1/2 on mobile and 3/4 on large screens."
                 />
+              </div>
+            </div>
+
+            {/* Three Key Areas Editor */}
+            <div className="pt-4 border-t border-[#DCE6EB] space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#135C70]">
+                Three Key Service Areas
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {homeData.services_list?.map((svc, idx) => (
+                  <div key={idx} className="p-4 rounded-lg border border-[#D8ECF0] bg-[#F7FCFD] space-y-3">
+                    <span className="text-[11px] font-bold text-[#135C70]">Service Area #{idx + 1}</span>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700">Area Title</label>
+                      <input
+                        type="text"
+                        value={svc.title}
+                        onChange={(e) => {
+                          const next = [...homeData.services_list];
+                          next[idx].title = e.target.value;
+                          setHomeData({ ...homeData, services_list: next });
+                        }}
+                        className="input-control text-xs mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700">Summary Description</label>
+                      <textarea
+                        rows={2}
+                        value={svc.description}
+                        onChange={(e) => {
+                          const next = [...homeData.services_list];
+                          next[idx].description = e.target.value;
+                          setHomeData({ ...homeData, services_list: next });
+                        }}
+                        className="input-control text-xs mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700">
+                        Bullet Points (One per line)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={svc.points ? svc.points.join("\n") : ""}
+                        onChange={(e) => {
+                          const next = [...homeData.services_list];
+                          next[idx].points = e.target.value
+                            .split("\n")
+                            .map((p) => p.trim())
+                            .filter(Boolean);
+                          setHomeData({ ...homeData, services_list: next });
+                        }}
+                        className="input-control text-xs mt-1"
+                        placeholder="Bullet point 1&#10;Bullet point 2"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -510,17 +617,20 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Portrait Image URL</label>
-                <input
-                  type="text"
+                <ImageUploadField
+                  label="Portrait Image"
                   value={homeData.leadership_spotlight?.image || ""}
-                  onChange={(e) =>
+                  onChange={(url) =>
                     setHomeData({
                       ...homeData,
-                      leadership_spotlight: { ...homeData.leadership_spotlight, image: e.target.value }
+                      leadership_spotlight: {
+                        ...homeData.leadership_spotlight,
+                        image: url
+                      }
                     })
                   }
-                  className="input-control text-xs font-mono"
+                  placeholder="/assets/image.png or https://...supabase.co/..."
+                  hint="Upload an executive portrait or paste a URL"
                 />
               </div>
 
@@ -609,16 +719,15 @@ export default function AdminContentPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700">Image Path</label>
-                    <input
-                      type="text"
+                    <ImageUploadField
+                      label="Card Image"
                       value={item.image}
-                      onChange={(e) => {
+                      onChange={(url) => {
                         const next = [...homeData.focused_areas];
-                        next[idx].image = e.target.value;
+                        next[idx].image = url;
                         setHomeData({ ...homeData, focused_areas: next });
                       }}
-                      className="input-control text-xs mt-1 font-mono"
+                      placeholder="/assets/monoclonal antibodies 1.png"
                     />
                   </div>
                   <div>

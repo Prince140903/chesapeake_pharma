@@ -57,23 +57,6 @@ When you first visit the website, you see the public home page.
 
 ---
 
-#### 3. Services Page
-**Where to find it:** /services
-
-**What's on it:**
-- Detailed list of all services offered
-- Benefits of each service
-- How services can help your business
-- Pricing or service tiers (if applicable)
-
-**What to test:**
-- Are all services listed?
-- Are descriptions clear?
-- Can you read everything?
-- Mobile-friendly?
-
----
-
 #### 4. Leadership Page
 **Where to find it:** /leadership
 

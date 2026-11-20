@@ -183,3 +183,73 @@ export async function deletePublicationAction(id: string): Promise<ContentAction
   }
 }
 
+/**
+ * Upload an image to Supabase Storage bucket ('site-images')
+ * Accepts FormData with file field. Returns the public URL.
+ */
+export async function uploadSiteImageAction(
+  formData: FormData
+): Promise<ContentActionResponse<{ url: string; path: string }>> {
+  try {
+    const file = formData.get("file") as File | null;
+    if (!file) {
+      return { success: false, error: "No file provided" };
+    }
+
+    const supabase = createAdminServiceClient() || createClient();
+    if (!supabase) {
+      return {
+        success: false,
+        error: "Supabase client is not configured on the server."
+      };
+    }
+
+    const bucketName = "site-images";
+
+    // Clean file name and generate unique timestamp path
+    const extension = file.name.split(".").pop() || "png";
+    const baseName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "_")
+      .toLowerCase();
+    const filePath = `uploads/${Date.now()}-${baseName}.${extension}`;
+
+    // Convert file to ArrayBuffer / Buffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, buffer, {
+        contentType: file.type || "image/png",
+        upsert: true
+      });
+
+    if (uploadError) {
+      return {
+        success: false,
+        error: `Storage upload failed: ${uploadError.message}`
+      };
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return {
+      success: true,
+      data: {
+        url: publicUrlData.publicUrl,
+        path: filePath
+      }
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || "An unexpected error occurred during image upload."
+    };
+  }
+}
+
+
