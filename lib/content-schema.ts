@@ -8,8 +8,6 @@ export interface HeroContent {
   description: string;
   primary_btn_text: string;
   primary_btn_link: string;
-  secondary_btn_text?: string;
-  secondary_btn_link?: string;
   banner_image: string;
   banner_image_alt: string;
   banner_images?: string[];
