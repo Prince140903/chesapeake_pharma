@@ -129,8 +129,9 @@ export default async function HomePage() {
             4. ABOUT OUR LEADERSHIP SECTION
            ======================================================== */}
         <section
+          id="leadership"
           aria-label="About Our Leadership"
-          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
+          className="scroll-mt-24 rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
         >
           {/* Section Header */}
           <div className="flex items-center gap-3 mb-8 pb-4 border-b border-[#E6EFF1]">

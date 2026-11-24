@@ -34,7 +34,8 @@ export function MarketingHeader() {
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 xl:gap-8 lg:flex" aria-label="Primary navigation">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              !item.href.includes("#") && pathname === item.href;
             return (
               <Link
                 key={item.href}
@@ -84,7 +85,8 @@ export function MarketingHeader() {
         <div className="border-t border-line bg-white px-5 py-4 lg:hidden shadow-lg animate-in fade-in duration-200">
           <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                !item.href.includes("#") && pathname === item.href;
               return (
                 <Link
                   onClick={() => setOpen(false)}

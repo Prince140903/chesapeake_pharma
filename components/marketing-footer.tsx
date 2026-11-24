@@ -72,7 +72,7 @@ export function MarketingFooter() {
                 Home
               </Link>
 
-              <Link href="/about" className="hover:text-white transition-colors">
+              <Link href="/#leadership" className="hover:text-white transition-colors">
                 About Us
               </Link>
 
@@ -110,13 +110,13 @@ export function MarketingFooter() {
 
               <span className="text-slate-600">·</span>
 
-              <Link href="/about" className="hover:text-white transition-colors">
+              <Link href="/#leadership" className="hover:text-white transition-colors">
                 Sitemap
               </Link>
 
               <span className="text-slate-600">·</span>
 
-              <Link href="/about" className="hover:text-white transition-colors">
+              <Link href="/#leadership" className="hover:text-white transition-colors">
                 Privacy & Terms
               </Link>
             </div>
