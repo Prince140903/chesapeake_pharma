@@ -15,7 +15,7 @@ import {
   AlertCircle,
   HelpCircle,
   Image as ImageIcon,
-  Edit2
+  Edit2,
 } from "lucide-react";
 import {
   HomePageContent,
@@ -26,14 +26,14 @@ import {
   defaultHomePageContent,
   defaultAboutPageContent,
   defaultContactPageContent,
-  defaultPublicationsPageContent
+  defaultPublicationsPageContent,
 } from "@/lib/content-schema";
 import {
   getSiteContentAction,
   updateSiteContentAction,
   addPublicationAction,
   updatePublicationAction,
-  deletePublicationAction
+  deletePublicationAction,
 } from "@/app/admin/content-actions";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
 import { MultiImageUploadField } from "@/components/admin/multi-image-upload-field";
@@ -44,13 +44,23 @@ export default function AdminContentPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("home");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Form State
-  const [homeData, setHomeData] = useState<HomePageContent>(defaultHomePageContent);
-  const [aboutData, setAboutData] = useState<AboutPageContent>(defaultAboutPageContent);
-  const [contactData, setContactData] = useState<ContactPageContent>(defaultContactPageContent);
-  const [publicationsData, setPublicationsData] = useState<PublicationsPageContent>(defaultPublicationsPageContent);
+  const [homeData, setHomeData] = useState<HomePageContent>(
+    defaultHomePageContent,
+  );
+  const [aboutData, setAboutData] = useState<AboutPageContent>(
+    defaultAboutPageContent,
+  );
+  const [contactData, setContactData] = useState<ContactPageContent>(
+    defaultContactPageContent,
+  );
+  const [publicationsData, setPublicationsData] =
+    useState<PublicationsPageContent>(defaultPublicationsPageContent);
 
   // Publication Modal State for Add / Edit
   const [editingPub, setEditingPub] = useState<PublicationItem | null>(null);
@@ -65,7 +75,7 @@ export default function AdminContentPage() {
           getSiteContentAction<HomePageContent>("home"),
           getSiteContentAction<AboutPageContent>("about"),
           getSiteContentAction<ContactPageContent>("contact"),
-          getSiteContentAction<PublicationsPageContent>("publications")
+          getSiteContentAction<PublicationsPageContent>("publications"),
         ]);
 
         if (homeRes.data) setHomeData(homeRes.data);
@@ -95,16 +105,28 @@ export default function AdminContentPage() {
       } else if (activeTab === "contact") {
         result = await updateSiteContentAction("contact", contactData);
       } else if (activeTab === "publications") {
-        result = await updateSiteContentAction("publications", publicationsData);
+        result = await updateSiteContentAction(
+          "publications",
+          publicationsData,
+        );
       }
 
       if (result?.success) {
-        setStatusMessage({ type: "success", text: `${activeTab.toUpperCase()} content saved and published successfully!` });
+        setStatusMessage({
+          type: "success",
+          text: `${activeTab.toUpperCase()} content saved and published successfully!`,
+        });
       } else {
-        setStatusMessage({ type: "error", text: result?.error || "Failed to update content." });
+        setStatusMessage({
+          type: "error",
+          text: result?.error || "Failed to update content.",
+        });
       }
     } catch (err: any) {
-      setStatusMessage({ type: "error", text: err?.message || "An unexpected error occurred." });
+      setStatusMessage({
+        type: "error",
+        text: err?.message || "An unexpected error occurred.",
+      });
     } finally {
       setSaving(false);
       setTimeout(() => setStatusMessage(null), 5000);
@@ -126,7 +148,7 @@ export default function AdminContentPage() {
         doi: "",
         link: "",
         badge: "Scientific Article",
-        status: "Published"
+        status: "Published",
       });
     }
     setIsPubModalOpen(true);
@@ -147,13 +169,20 @@ export default function AdminContentPage() {
 
       if (res.success) {
         // Refresh local publications state
-        const refreshed = await getSiteContentAction<PublicationsPageContent>("publications");
+        const refreshed =
+          await getSiteContentAction<PublicationsPageContent>("publications");
         if (refreshed.data) setPublicationsData(refreshed.data);
         setIsPubModalOpen(false);
         setEditingPub(null);
-        setStatusMessage({ type: "success", text: "Publication saved successfully!" });
+        setStatusMessage({
+          type: "success",
+          text: "Publication saved successfully!",
+        });
       } else {
-        setStatusMessage({ type: "error", text: res.error || "Failed to save publication" });
+        setStatusMessage({
+          type: "error",
+          text: res.error || "Failed to save publication",
+        });
       }
     } finally {
       setSaving(false);
@@ -169,11 +198,17 @@ export default function AdminContentPage() {
       if (res.success) {
         setPublicationsData((prev) => ({
           ...prev,
-          items: prev.items.filter((item) => item.id !== id)
+          items: prev.items.filter((item) => item.id !== id),
         }));
-        setStatusMessage({ type: "success", text: "Publication deleted successfully!" });
+        setStatusMessage({
+          type: "success",
+          text: "Publication deleted successfully!",
+        });
       } else {
-        setStatusMessage({ type: "error", text: res.error || "Failed to delete publication" });
+        setStatusMessage({
+          type: "error",
+          text: res.error || "Failed to delete publication",
+        });
       }
     } finally {
       setSaving(false);
@@ -204,7 +239,8 @@ export default function AdminContentPage() {
             Website CMS & Content Editor
           </h1>
           <p className="text-xs text-[#637786] mt-0.5">
-            Manage text, imagery, publications, and contact info displayed across the public website.
+            Manage text, imagery, publications, and contact info displayed
+            across the public website.
           </p>
         </div>
 
@@ -214,7 +250,11 @@ export default function AdminContentPage() {
           className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-50"
         >
           <Save size={16} />
-          <span>{saving ? "Publishing Changes..." : `Save & Publish ${activeTab.toUpperCase()}`}</span>
+          <span>
+            {saving
+              ? "Publishing Changes..."
+              : `Save & Publish ${activeTab.toUpperCase()}`}
+          </span>
         </button>
       </div>
 
@@ -227,7 +267,11 @@ export default function AdminContentPage() {
               : "bg-rose-50 border-rose-200 text-rose-900"
           }`}
         >
-          {statusMessage.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          {statusMessage.type === "success" ? (
+            <CheckCircle2 size={16} />
+          ) : (
+            <AlertCircle size={16} />
+          )}
           <span>{statusMessage.text}</span>
         </div>
       )}
@@ -238,7 +282,7 @@ export default function AdminContentPage() {
           { key: "home", label: "Home Page", icon: Globe },
           { key: "publications", label: "Publications", icon: BookOpen },
           { key: "about", label: "About Us", icon: FileText },
-          { key: "contact", label: "Contact Info", icon: Mail }
+          { key: "contact", label: "Contact Info", icon: Mail },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -278,12 +322,17 @@ export default function AdminContentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Badge Text</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Badge Text
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.badge || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, badge: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, badge: e.target.value },
+                    })
                   }
                   className="input-control text-xs"
                 />
@@ -296,7 +345,7 @@ export default function AdminContentPage() {
                   onChange={(url) =>
                     setHomeData({
                       ...homeData,
-                      hero: { ...homeData.hero, banner_image: url }
+                      hero: { ...homeData.hero, banner_image: url },
                     })
                   }
                   placeholder="/assets/banner.png or https://...supabase.co/..."
@@ -308,7 +357,8 @@ export default function AdminContentPage() {
                 <MultiImageUploadField
                   label="Banner Slider Images Sequence"
                   images={
-                    homeData.hero?.banner_images && homeData.hero.banner_images.length > 0
+                    homeData.hero?.banner_images &&
+                    homeData.hero.banner_images.length > 0
                       ? homeData.hero.banner_images
                       : [homeData.hero?.banner_image || "/assets/banner.png"]
                   }
@@ -318,8 +368,9 @@ export default function AdminContentPage() {
                       hero: {
                         ...homeData.hero,
                         banner_images: imgs,
-                        banner_image: imgs[0] || homeData.hero?.banner_image || ""
-                      }
+                        banner_image:
+                          imgs[0] || homeData.hero?.banner_image || "",
+                      },
                     })
                   }
                   hint="Upload multiple images to Supabase Storage to display an image sequence in the hero banner slider."
@@ -327,12 +378,17 @@ export default function AdminContentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Citation / Reference Footnote (Optional)</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Citation / Reference Footnote (Optional)
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.citation || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, citation: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, citation: e.target.value },
+                    })
                   }
                   placeholder="*From: Lyness A, Burke J..."
                   className="input-control text-xs"
@@ -340,84 +396,128 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Title Line 1</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Title Line 1
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.title_line1 || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, title_line1: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, title_line1: e.target.value },
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Highlight Line (Cyan)</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Highlight Line (Cyan)
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.title_highlight || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, title_highlight: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: {
+                        ...homeData.hero,
+                        title_highlight: e.target.value,
+                      },
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Title Line 2</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Title Line 2
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.title_line2 || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, title_line2: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, title_line2: e.target.value },
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Title Line 3 (Optional)</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Title Line 3 (Optional)
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.title_line3 || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, title_line3: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, title_line3: e.target.value },
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Description Subtitle</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Description Subtitle
+                </label>
                 <textarea
                   rows={2}
                   value={homeData.hero?.description || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, description: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: { ...homeData.hero, description: e.target.value },
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Primary CTA Button Label</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Primary CTA Button Label
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.primary_btn_text || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, primary_btn_text: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: {
+                        ...homeData.hero,
+                        primary_btn_text: e.target.value,
+                      },
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Primary CTA Link</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Primary CTA Link
+                </label>
                 <input
                   type="text"
                   value={homeData.hero?.primary_btn_link || ""}
                   onChange={(e) =>
-                    setHomeData({ ...homeData, hero: { ...homeData.hero, primary_btn_link: e.target.value } })
+                    setHomeData({
+                      ...homeData,
+                      hero: {
+                        ...homeData.hero,
+                        primary_btn_link: e.target.value,
+                      },
+                    })
                   }
                   className="input-control text-xs font-mono"
                 />
@@ -434,7 +534,9 @@ export default function AdminContentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Section Title</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Section Title
+                </label>
                 <input
                   type="text"
                   value={homeData.expertise_section?.title || "EXPERTISE"}
@@ -442,9 +544,10 @@ export default function AdminContentPage() {
                     setHomeData({
                       ...homeData,
                       expertise_section: {
-                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
-                        title: e.target.value
-                      }
+                        ...(homeData.expertise_section ||
+                          defaultHomePageContent.expertise_section!),
+                        title: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -452,7 +555,9 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Badge</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Badge
+                </label>
                 <input
                   type="text"
                   value={homeData.expertise_section?.badge || "Key Services"}
@@ -460,9 +565,10 @@ export default function AdminContentPage() {
                     setHomeData({
                       ...homeData,
                       expertise_section: {
-                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
-                        badge: e.target.value
-                      }
+                        ...(homeData.expertise_section ||
+                          defaultHomePageContent.expertise_section!),
+                        badge: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -470,7 +576,9 @@ export default function AdminContentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Lead Narrative Text</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Lead Narrative Text
+                </label>
                 <textarea
                   rows={3}
                   value={homeData.expertise_section?.lead_text || ""}
@@ -478,9 +586,10 @@ export default function AdminContentPage() {
                     setHomeData({
                       ...homeData,
                       expertise_section: {
-                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
-                        lead_text: e.target.value
-                      }
+                        ...(homeData.expertise_section ||
+                          defaultHomePageContent.expertise_section!),
+                        lead_text: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -489,25 +598,27 @@ export default function AdminContentPage() {
 
               <div className="md:col-span-2">
                 <MultiImageUploadField
-                  label="Section Slider Images (Delivery Devices & Clinical Imaging Modalities)"
+                  label="Section Slider Images (COMBINATION DRUG DELIVERY DEVICES)"
                   images={
-                    homeData.expertise_section?.slider_images && homeData.expertise_section.slider_images.length > 0
+                    homeData.expertise_section?.slider_images &&
+                    homeData.expertise_section.slider_images.length > 0
                       ? homeData.expertise_section.slider_images
                       : [
                           "/assets/docx_images/image6.png",
                           "/assets/docx_images/image7.jpeg",
                           "/assets/docx_images/image8.png",
                           "/assets/docx_images/image9.png",
-                          "/assets/docx_images/image5.png"
+                          "/assets/docx_images/image5.png",
                         ]
                   }
                   onChange={(imgs) =>
                     setHomeData({
                       ...homeData,
                       expertise_section: {
-                        ...(homeData.expertise_section || defaultHomePageContent.expertise_section!),
-                        slider_images: imgs
-                      }
+                        ...(homeData.expertise_section ||
+                          defaultHomePageContent.expertise_section!),
+                        slider_images: imgs,
+                      },
                     })
                   }
                   hint="Upload images directly to Supabase Storage or edit URLs. Responsive slider shows 1/2 on mobile and 3/4 on large screens."
@@ -523,10 +634,17 @@ export default function AdminContentPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {homeData.services_list?.map((svc, idx) => (
-                  <div key={idx} className="p-4 rounded-lg border border-[#D8ECF0] bg-[#F7FCFD] space-y-3">
-                    <span className="text-[11px] font-bold text-[#135C70]">Service Area #{idx + 1}</span>
+                  <div
+                    key={idx}
+                    className="p-4 rounded-lg border border-[#D8ECF0] bg-[#F7FCFD] space-y-3"
+                  >
+                    <span className="text-[11px] font-bold text-[#135C70]">
+                      Service Area #{idx + 1}
+                    </span>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700">Area Title</label>
+                      <label className="block text-[11px] font-semibold text-slate-700">
+                        Area Title
+                      </label>
                       <input
                         type="text"
                         value={svc.title}
@@ -540,7 +658,9 @@ export default function AdminContentPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700">Summary Description</label>
+                      <label className="block text-[11px] font-semibold text-slate-700">
+                        Summary Description
+                      </label>
                       <textarea
                         rows={2}
                         value={svc.description}
@@ -587,14 +707,19 @@ export default function AdminContentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Executive Name</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Executive Name
+                </label>
                 <input
                   type="text"
                   value={homeData.leadership_spotlight?.name || ""}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      leadership_spotlight: { ...homeData.leadership_spotlight, name: e.target.value }
+                      leadership_spotlight: {
+                        ...homeData.leadership_spotlight,
+                        name: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -602,21 +727,26 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Role Badge</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Role Badge
+                </label>
                 <input
                   type="text"
                   value={homeData.leadership_spotlight?.role_badge || ""}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      leadership_spotlight: { ...homeData.leadership_spotlight, role_badge: e.target.value }
+                      leadership_spotlight: {
+                        ...homeData.leadership_spotlight,
+                        role_badge: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <ImageUploadField
                   label="Portrait Image"
                   value={homeData.leadership_spotlight?.image || ""}
@@ -625,24 +755,29 @@ export default function AdminContentPage() {
                       ...homeData,
                       leadership_spotlight: {
                         ...homeData.leadership_spotlight,
-                        image: url
-                      }
+                        image: url,
+                      },
                     })
                   }
                   placeholder="/assets/image.png or https://...supabase.co/..."
                   hint="Upload an executive portrait or paste a URL"
                 />
-              </div>
+              </div> */}
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Subtitle / Location Tag</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Subtitle / Location Tag
+                </label>
                 <input
                   type="text"
                   value={homeData.leadership_spotlight?.title_subtitle || ""}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      leadership_spotlight: { ...homeData.leadership_spotlight, title_subtitle: e.target.value }
+                      leadership_spotlight: {
+                        ...homeData.leadership_spotlight,
+                        title_subtitle: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -650,14 +785,19 @@ export default function AdminContentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Bio Paragraph 1</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Bio Paragraph 1
+                </label>
                 <textarea
                   rows={3}
                   value={homeData.leadership_spotlight?.paragraph1 || ""}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      leadership_spotlight: { ...homeData.leadership_spotlight, paragraph1: e.target.value }
+                      leadership_spotlight: {
+                        ...homeData.leadership_spotlight,
+                        paragraph1: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -665,14 +805,19 @@ export default function AdminContentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Bio Paragraph 2</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Bio Paragraph 2
+                </label>
                 <textarea
                   rows={3}
                   value={homeData.leadership_spotlight?.paragraph2 || ""}
                   onChange={(e) =>
                     setHomeData({
                       ...homeData,
-                      leadership_spotlight: { ...homeData.leadership_spotlight, paragraph2: e.target.value }
+                      leadership_spotlight: {
+                        ...homeData.leadership_spotlight,
+                        paragraph2: e.target.value,
+                      },
                     })
                   }
                   className="input-control text-xs"
@@ -690,10 +835,17 @@ export default function AdminContentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {homeData.focused_areas?.map((item, idx) => (
-                <div key={idx} className="p-4 rounded-lg border border-[#D8ECF0] bg-[#F7FCFD] space-y-3">
-                  <span className="text-[11px] font-bold text-[#135C70]">Card #{idx + 1}</span>
+                <div
+                  key={idx}
+                  className="p-4 rounded-lg border border-[#D8ECF0] bg-[#F7FCFD] space-y-3"
+                >
+                  <span className="text-[11px] font-bold text-[#135C70]">
+                    Card #{idx + 1}
+                  </span>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700">Badge Tag</label>
+                    <label className="block text-[11px] font-semibold text-slate-700">
+                      Badge Tag
+                    </label>
                     <input
                       type="text"
                       value={item.tag}
@@ -706,7 +858,9 @@ export default function AdminContentPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700">Title</label>
+                    <label className="block text-[11px] font-semibold text-slate-700">
+                      Title
+                    </label>
                     <input
                       type="text"
                       value={item.title}
@@ -731,7 +885,9 @@ export default function AdminContentPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700">Description</label>
+                    <label className="block text-[11px] font-semibold text-slate-700">
+                      Description
+                    </label>
                     <textarea
                       rows={3}
                       value={item.description}
@@ -763,7 +919,8 @@ export default function AdminContentPage() {
                   Public Publications Page Copy
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Controls the title, intro, and literature papers displayed on /publications.
+                  Controls the title, intro, and literature papers displayed on
+                  /publications.
                 </p>
               </div>
 
@@ -779,36 +936,51 @@ export default function AdminContentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Page Eyebrow</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Page Eyebrow
+                </label>
                 <input
                   type="text"
                   value={publicationsData.eyebrow || ""}
                   onChange={(e) =>
-                    setPublicationsData({ ...publicationsData, eyebrow: e.target.value })
+                    setPublicationsData({
+                      ...publicationsData,
+                      eyebrow: e.target.value,
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Page Title</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Page Title
+                </label>
                 <input
                   type="text"
                   value={publicationsData.title || ""}
                   onChange={(e) =>
-                    setPublicationsData({ ...publicationsData, title: e.target.value })
+                    setPublicationsData({
+                      ...publicationsData,
+                      title: e.target.value,
+                    })
                   }
                   className="input-control text-xs"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-[#163449] mb-1">Subtitle / Overview</label>
+                <label className="block text-xs font-semibold text-[#163449] mb-1">
+                  Subtitle / Overview
+                </label>
                 <textarea
                   rows={2}
                   value={publicationsData.subtitle || ""}
                   onChange={(e) =>
-                    setPublicationsData({ ...publicationsData, subtitle: e.target.value })
+                    setPublicationsData({
+                      ...publicationsData,
+                      subtitle: e.target.value,
+                    })
                   }
                   className="input-control text-xs"
                 />
@@ -839,13 +1011,20 @@ export default function AdminContentPage() {
                           </span>
                         )}
                         <span className="text-xs font-semibold text-slate-500">
-                          {pub.year} · {pub.journal} {pub.volume && `(${pub.volume})`}
+                          {pub.year} · {pub.journal}{" "}
+                          {pub.volume && `(${pub.volume})`}
                         </span>
                       </div>
-                      <h4 className="text-sm font-bold text-[#0B2D45]">{pub.title}</h4>
-                      <p className="text-xs text-slate-600">Authors: {pub.authors}</p>
+                      <h4 className="text-sm font-bold text-[#0B2D45]">
+                        {pub.title}
+                      </h4>
+                      <p className="text-xs text-slate-600">
+                        Authors: {pub.authors}
+                      </p>
                       {pub.doi && (
-                        <p className="text-xs text-[#289CA0] font-mono break-all">DOI: {pub.doi}</p>
+                        <p className="text-xs text-[#289CA0] font-mono break-all">
+                          DOI: {pub.doi}
+                        </p>
                       )}
                     </div>
 
@@ -871,7 +1050,8 @@ export default function AdminContentPage() {
                 ))
               ) : (
                 <div className="p-8 text-center text-xs text-slate-500">
-                  No publications recorded yet. Click &quot;Add Publication&quot; above to add one.
+                  No publications recorded yet. Click &quot;Add
+                  Publication&quot; above to add one.
                 </div>
               )}
             </div>
@@ -891,71 +1071,105 @@ export default function AdminContentPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Eyebrow</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Eyebrow
+              </label>
               <input
                 type="text"
                 value={aboutData.eyebrow || ""}
-                onChange={(e) => setAboutData({ ...aboutData, eyebrow: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({ ...aboutData, eyebrow: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Main Heading</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Main Heading
+              </label>
               <input
                 type="text"
                 value={aboutData.title || ""}
-                onChange={(e) => setAboutData({ ...aboutData, title: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({ ...aboutData, title: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Lead Intro Paragraph</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Lead Intro Paragraph
+              </label>
               <textarea
                 rows={3}
                 value={aboutData.intro_p1 || ""}
-                onChange={(e) => setAboutData({ ...aboutData, intro_p1: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({ ...aboutData, intro_p1: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Secondary Paragraph</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Secondary Paragraph
+              </label>
               <textarea
                 rows={3}
                 value={aboutData.intro_p2 || ""}
-                onChange={(e) => setAboutData({ ...aboutData, intro_p2: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({ ...aboutData, intro_p2: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Principles Eyebrow</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Principles Eyebrow
+              </label>
               <input
                 type="text"
                 value={aboutData.principles_eyebrow || ""}
-                onChange={(e) => setAboutData({ ...aboutData, principles_eyebrow: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({
+                    ...aboutData,
+                    principles_eyebrow: e.target.value,
+                  })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Principles Title</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Principles Title
+              </label>
               <input
                 type="text"
                 value={aboutData.principles_title || ""}
-                onChange={(e) => setAboutData({ ...aboutData, principles_title: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({
+                    ...aboutData,
+                    principles_title: e.target.value,
+                  })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Footnote Note</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Footnote Note
+              </label>
               <input
                 type="text"
                 value={aboutData.footnote || ""}
-                onChange={(e) => setAboutData({ ...aboutData, footnote: e.target.value })}
+                onChange={(e) =>
+                  setAboutData({ ...aboutData, footnote: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
@@ -975,72 +1189,103 @@ export default function AdminContentPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Official Email</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Official Email
+              </label>
               <input
                 type="email"
                 value={contactData.email || ""}
-                onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
+                onChange={(e) =>
+                  setContactData({ ...contactData, email: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Location Address</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Location Address
+              </label>
               <input
                 type="text"
                 value={contactData.location || ""}
-                onChange={(e) => setContactData({ ...contactData, location: e.target.value })}
+                onChange={(e) =>
+                  setContactData({ ...contactData, location: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Phone Number (Optional)</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Phone Number (Optional)
+              </label>
               <input
                 type="text"
                 value={contactData.phone || ""}
-                onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
+                onChange={(e) =>
+                  setContactData({ ...contactData, phone: e.target.value })
+                }
                 placeholder="+1 ..."
                 className="input-control text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Leadership Representative</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Leadership Representative
+              </label>
               <input
                 type="text"
                 value={contactData.leadership_name || ""}
-                onChange={(e) => setContactData({ ...contactData, leadership_name: e.target.value })}
+                onChange={(e) =>
+                  setContactData({
+                    ...contactData,
+                    leadership_name: e.target.value,
+                  })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Contact Page Title</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Contact Page Title
+              </label>
               <input
                 type="text"
                 value={contactData.title || ""}
-                onChange={(e) => setContactData({ ...contactData, title: e.target.value })}
+                onChange={(e) =>
+                  setContactData({ ...contactData, title: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Contact Page Subtitle</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Contact Page Subtitle
+              </label>
               <input
                 type="text"
                 value={contactData.subtitle || ""}
-                onChange={(e) => setContactData({ ...contactData, subtitle: e.target.value })}
+                onChange={(e) =>
+                  setContactData({ ...contactData, subtitle: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#163449] mb-1">Advisory Summary</label>
+              <label className="block text-xs font-semibold text-[#163449] mb-1">
+                Advisory Summary
+              </label>
               <textarea
                 rows={2}
                 value={contactData.summary || ""}
-                onChange={(e) => setContactData({ ...contactData, summary: e.target.value })}
+                onChange={(e) =>
+                  setContactData({ ...contactData, summary: e.target.value })
+                }
                 className="input-control text-xs"
               />
             </div>
@@ -1060,24 +1305,32 @@ export default function AdminContentPage() {
 
             <form onSubmit={handleSavePublication} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Title *
+                </label>
                 <textarea
                   required
                   rows={2}
                   value={editingPub.title}
-                  onChange={(e) => setEditingPub({ ...editingPub, title: e.target.value })}
+                  onChange={(e) =>
+                    setEditingPub({ ...editingPub, title: e.target.value })
+                  }
                   className="input-control text-xs"
                   placeholder="Paper or review title..."
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Authors *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Authors *
+                </label>
                 <input
                   required
                   type="text"
                   value={editingPub.authors}
-                  onChange={(e) => setEditingPub({ ...editingPub, authors: e.target.value })}
+                  onChange={(e) =>
+                    setEditingPub({ ...editingPub, authors: e.target.value })
+                  }
                   className="input-control text-xs"
                   placeholder="e.g. Green, P., Schneider, A., & Lange, J."
                 />
@@ -1085,23 +1338,31 @@ export default function AdminContentPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Journal / Publisher *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Journal / Publisher *
+                  </label>
                   <input
                     required
                     type="text"
                     value={editingPub.journal}
-                    onChange={(e) => setEditingPub({ ...editingPub, journal: e.target.value })}
+                    onChange={(e) =>
+                      setEditingPub({ ...editingPub, journal: e.target.value })
+                    }
                     className="input-control text-xs"
                     placeholder="e.g. mAbs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Volume / Issue</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Volume / Issue
+                  </label>
                   <input
                     type="text"
                     value={editingPub.volume}
-                    onChange={(e) => setEditingPub({ ...editingPub, volume: e.target.value })}
+                    onChange={(e) =>
+                      setEditingPub({ ...editingPub, volume: e.target.value })
+                    }
                     className="input-control text-xs"
                     placeholder="e.g. 16(1) or in press"
                   />
@@ -1110,33 +1371,45 @@ export default function AdminContentPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Year</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Year
+                  </label>
                   <input
                     type="text"
                     value={editingPub.year}
-                    onChange={(e) => setEditingPub({ ...editingPub, year: e.target.value })}
+                    onChange={(e) =>
+                      setEditingPub({ ...editingPub, year: e.target.value })
+                    }
                     className="input-control text-xs"
                     placeholder="2026"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Badge Tag</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Badge Tag
+                  </label>
                   <input
                     type="text"
                     value={editingPub.badge || ""}
-                    onChange={(e) => setEditingPub({ ...editingPub, badge: e.target.value })}
+                    onChange={(e) =>
+                      setEditingPub({ ...editingPub, badge: e.target.value })
+                    }
                     className="input-control text-xs"
                     placeholder="e.g. Systematic Review"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Status
+                  </label>
                   <input
                     type="text"
                     value={editingPub.status || ""}
-                    onChange={(e) => setEditingPub({ ...editingPub, status: e.target.value })}
+                    onChange={(e) =>
+                      setEditingPub({ ...editingPub, status: e.target.value })
+                    }
                     className="input-control text-xs"
                     placeholder="Published / In Press"
                   />
@@ -1144,12 +1417,18 @@ export default function AdminContentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">DOI / Link</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  DOI / Link
+                </label>
                 <input
                   type="url"
                   value={editingPub.link || ""}
                   onChange={(e) =>
-                    setEditingPub({ ...editingPub, link: e.target.value, doi: e.target.value })
+                    setEditingPub({
+                      ...editingPub,
+                      link: e.target.value,
+                      doi: e.target.value,
+                    })
                   }
                   className="input-control text-xs font-mono"
                   placeholder="https://doi.org/..."
@@ -1179,4 +1458,3 @@ export default function AdminContentPage() {
     </div>
   );
 }
-

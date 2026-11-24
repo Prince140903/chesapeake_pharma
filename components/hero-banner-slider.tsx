@@ -78,12 +78,6 @@ export function HeroBannerSlider({ hero }: HeroBannerSliderProps) {
                   <span>{hero.title_line3}</span>
                 </>
               )}
-              {hero.title_line4 && (
-                <>
-                  {" "}
-                  <span>{hero.title_line4}</span>
-                </>
-              )}
             </h1>
 
             {/* Description */}

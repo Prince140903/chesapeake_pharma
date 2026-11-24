@@ -3,13 +3,18 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+} from "lucide-react";
 import { TealWedge } from "@/components/ui";
 import {
   CommercialStrategyIcon,
   DrugDeliveryIcon,
   BusinessDevIcon,
-  CompetitiveIntelIcon
+  CompetitiveIntelIcon,
 } from "@/components/reference-icons";
 import { ServiceItem, ExpertiseSectionContent } from "@/lib/content-schema";
 import { SafeImage } from "@/components/safe-image";
@@ -21,7 +26,7 @@ interface ServicesExpertiseSectionProps {
 
 export function ServicesExpertiseSection({
   expertise,
-  services
+  services,
 }: ServicesExpertiseSectionProps) {
   // Slider images from expertise / document
   const defaultFallbackImages = [
@@ -29,7 +34,7 @@ export function ServicesExpertiseSection({
     "/assets/docx_images/image7.jpeg",
     "/assets/docx_images/image8.png",
     "/assets/docx_images/image9.png",
-    "/assets/docx_images/image5.png"
+    "/assets/docx_images/image5.png",
   ];
 
   const sliderImages =
@@ -116,7 +121,7 @@ export function ServicesExpertiseSection({
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold uppercase tracking-wider text-[#135C70] flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#289CA0]" />
-            Delivery Devices & Clinical Imaging Modalities
+            COMBINATION DRUG DELIVERY DEVICES
           </span>
 
           {totalImages > itemsPerView && (
@@ -146,7 +151,7 @@ export function ServicesExpertiseSection({
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{
-              transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`
+              transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
             }}
           >
             {sliderImages.map((src, idx) => (
@@ -154,13 +159,15 @@ export function ServicesExpertiseSection({
                 key={idx}
                 className="shrink-0 px-2"
                 style={{
-                  width: `${100 / itemsPerView}%`
+                  width: `${100 / itemsPerView}%`,
                 }}
               >
                 <div className="relative aspect-[4/3] w-full rounded-lg overflow-hidden border border-[#D5E7EA] bg-white shadow-xs group">
                   <SafeImage
                     src={src}
-                    fallbackSrc={defaultFallbackImages[idx % defaultFallbackImages.length]}
+                    fallbackSrc={
+                      defaultFallbackImages[idx % defaultFallbackImages.length]
+                    }
                     alt={`Drug delivery technology illustration ${idx + 1}`}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -182,7 +189,9 @@ export function ServicesExpertiseSection({
                 onClick={() => setCurrentIndex(dotIdx)}
                 aria-label={`Jump to slide ${dotIdx + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  dotIdx === currentIndex ? "w-6 bg-[#289CA0]" : "w-1.5 bg-[#CBDCE0]"
+                  dotIdx === currentIndex
+                    ? "w-6 bg-[#289CA0]"
+                    : "w-1.5 bg-[#CBDCE0]"
                 }`}
               />
             ))}

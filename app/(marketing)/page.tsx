@@ -18,12 +18,16 @@ export default async function HomePage() {
   const content: HomePageContent = contentRes?.data || defaultHomePageContent;
 
   const hero = content.hero || defaultHomePageContent.hero;
-  const strat = content.strategic_leadership || defaultHomePageContent.strategic_leadership;
-  const leader = content.leadership_spotlight || defaultHomePageContent.leadership_spotlight;
-  const services = content.services_list || defaultHomePageContent.services_list;
-  const focusAreas = content.focused_areas || defaultHomePageContent.focused_areas;
-  const testimonials = content.testimonials || defaultHomePageContent.testimonials;
-  const expertise = content.expertise_section || defaultHomePageContent.expertise_section;
+  const strat =
+    content.strategic_leadership || defaultHomePageContent.strategic_leadership;
+  const leader =
+    content.leadership_spotlight || defaultHomePageContent.leadership_spotlight;
+  const services =
+    content.services_list || defaultHomePageContent.services_list;
+  const focusAreas =
+    content.focused_areas || defaultHomePageContent.focused_areas;
+  const expertise =
+    content.expertise_section || defaultHomePageContent.expertise_section;
 
   // Helper to render logo badge
   const renderLogoBadge = (logo: string) => {
@@ -138,7 +142,7 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-10 items-start">
             {/* Leadership Portrait */}
-            <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center sm:items-start">
+            {/* <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center sm:items-start">
               <div className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-[#D4E8EB] bg-[#E8F6F8] w-full max-w-[240px] shadow-sm">
                 <Image
                   src={leader.image || "/assets/image.png"}
@@ -148,14 +152,10 @@ export default async function HomePage() {
                   className="object-contain object-center"
                 />
               </div>
-              <div className="mt-3.5 flex items-center gap-2 text-xs font-semibold text-[#07546A]">
-                <CheckCircle2 size={15} className="text-[#289CA0]" />
-                <span>{leader.badge_text || "Verified Biopharma Executive"}</span>
-              </div>
-            </div>
+            </div> */}
 
             {/* Leadership Biography Content */}
-            <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-between h-full space-y-4">
+            <div className="md:col-span-10 lg:col-span-12 flex flex-col justify-between h-full space-y-4">
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0B2D45] tracking-tight">
@@ -177,18 +177,6 @@ export default async function HomePage() {
 
               <div className="pt-4 flex flex-wrap items-center gap-3">
                 <Link
-                  href="/leadership"
-                  className="focus-ring inline-flex items-center gap-2 rounded-lg bg-[#135C70] hover:bg-[#0B3B48] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition-all active:scale-[0.98] group"
-                >
-                  <FileText size={15} />
-                  <span>View Full CV</span>
-                  <ArrowRight
-                    size={14}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                </Link>
-
-                <Link
                   href="/contact"
                   className="focus-ring inline-flex items-center gap-2 rounded-lg border border-line bg-white hover:bg-aqua px-4 py-2.5 text-xs sm:text-sm font-semibold text-navy transition"
                 >
@@ -196,63 +184,6 @@ export default async function HomePage() {
                 </Link>
               </div>
             </div>
-          </div>
-        </section>
-
-        
-
-        {/* ========================================================
-           5. TESTIMONIALS & TRUSTED BY
-           ======================================================== */}
-        <section
-          aria-label="Testimonials and Trusted By"
-          className="rounded-2xl lg:rounded-3xl border border-[#CDE5E7] bg-white p-7 sm:p-10 xl:p-12 shadow-[0_10px_35px_rgba(11,45,69,0.05)]"
-        >
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6EFF1]">
-            <div className="flex items-center gap-3">
-              <h2 className="text-sm sm:text-base font-extrabold uppercase tracking-widest text-[#0B2D45]">
-                TESTIMONIALS & TRUSTED BY
-              </h2>
-              <TealWedge className="w-10 h-3" />
-            </div>
-            <span className="text-xs text-[#516C7D] font-medium">
-              Industry peer recognition & pharmaceutical partnership references
-            </span>
-          </div>
-
-          {/* Client Testimonial Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
-            {testimonials.map((t, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border border-[#D5E7EA] bg-[#F7FCFD] p-5 flex flex-col justify-between hover:bg-white hover:border-[#289CA0] transition shadow-xs"
-              >
-                <div>
-                  <div className="flex items-center justify-between border-b border-line/60 pb-3">
-                    {renderLogoBadge(t.logo)}
-                    <span className="text-[10px] font-semibold text-muted">
-                      Client Quote
-                    </span>
-                  </div>
-                  <p className="mt-3.5 text-xs sm:text-sm leading-relaxed text-[#4A6273] italic">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                </div>
-                <p className="mt-4 pt-3 border-t border-line/40 text-[11px] font-bold text-[#0B2D45]">
-                  {t.attribution}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Compliance & Verification Footnote */}
-          <div className="mt-6 pt-4 border-t border-line/50 text-center">
-            <p className="text-xs text-[#6F8A99]">
-              * Content & client logos reflect the layout reference design.
-              Formal endorsement approvals and verified client testimonials
-              pending client confirmation.
-            </p>
           </div>
         </section>
       </div>

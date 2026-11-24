@@ -4,7 +4,6 @@ export interface HeroContent {
   title_highlight: string;
   title_line2: string;
   title_line3: string;
-  title_line4: string;
   description: string;
   primary_btn_text: string;
   primary_btn_link: string;
@@ -29,9 +28,6 @@ export interface LeadershipSpotlightContent {
   title_subtitle: string;
   paragraph1: string;
   paragraph2: string;
-  image: string;
-  image_alt: string;
-  badge_text: string;
 }
 
 export interface ServiceItem {
@@ -68,7 +64,6 @@ export interface HomePageContent {
   leadership_spotlight: LeadershipSpotlightContent;
   services_list: ServiceItem[];
   focused_areas: FocusedAreaItem[];
-  testimonials: TestimonialItem[];
   expertise_section?: ExpertiseSectionContent;
 }
 
@@ -136,7 +131,6 @@ export const defaultHomePageContent: HomePageContent = {
     title_highlight: "STRATEGIC DRUG DELIVERY",
     title_line2: "AND PHARMACEUTICAL",
     title_line3: "PIPELINE INSIGHTS",
-    title_line4: "",
     description:
       "Expert guidance on combination products, novel injectables, and IV-to-subcutaneous transitions to derisk pharmaceutical pipeline investments.",
     primary_btn_text: "SCHEDULE A CONSULTATION",
@@ -146,32 +140,31 @@ export const defaultHomePageContent: HomePageContent = {
     banner_images: [
       "/assets/docx_images/image2.png",
       "/assets/docx_images/image3.png",
-      "/assets/docx_images/image4.jpeg"
+      "/assets/docx_images/image4.jpeg",
     ],
     citation:
-      "*From: Lyness A, Burke J. Investigating imaging modalities to characterize injection deposition for LVSC device design. PDA Universe of Pre-Filled Syringes and Injection Devices; 2026 Oct 6-7; Palm Springs, CA, USA."
+      "*From: Lyness A, Burke J. Investigating imaging modalities to characterize injection deposition for LVSC device design. PDA Universe of Pre-Filled Syringes and Injection Devices; 2026 Oct 6-7; Palm Springs, CA, USA.",
   },
   strategic_leadership: {
     title: "Advancing Drug Delivery & Biologics Commercialization",
-    subtitle: "Strategic guidance for novel drug-device combination products, injectables, and portfolio evolution",
+    subtitle:
+      "Strategic guidance for novel drug-device combination products, injectables, and portfolio evolution",
     paragraph1:
       "With over four decades of experience across global pharma and medical technology—including executive roles at Merck, Becton-Dickinson, and Novartis (Zyma SA)—Chesapeake Pharma under the leadership of Dr Phil Green provides commercial and strategic advisory services to pharmaceutical innovators and drug delivery developers.",
     paragraph2:
       "Backed by a doctoral foundation in pharmaceutical chemistry, he specializes in translating complex drug-device technologies into viable market leaders, offering deep expertise in combination product positioning, competitive intelligence, and IV-to-subcutaneous formulation transitions that optimize emerging pipelines and elevate patient-centric care.",
     image: "/assets/Picture1.png",
-    image_alt: "Advancing drug delivery and biologics commercialization"
+    image_alt: "Advancing drug delivery and biologics commercialization",
   },
   leadership_spotlight: {
     name: "Philip Green, Ph.D.",
     role_badge: "President",
-    title_subtitle: "President & Founder, Chesapeake Pharma LLC · Weehawken, NJ, USA",
+    title_subtitle:
+      "President & Founder, Chesapeake Pharma LLC · Weehawken, NJ, USA",
     paragraph1:
       "Dr. Green specializes in the commercialization of drug delivery technologies, spanning commercial strategy and market positioning of combination products including novel injectables, and high dose/large volume subcutaneous products. Currently, he consults with leading biopharmaceutical companies, packaging and drug delivery companies, on commercial strategies, business development, competitive intelligence, and trend analysis of emerging pharma pipelines.",
     paragraph2:
       "Previously Dr Green served as Executive Director of Biologics Device Strategy at Merck US. In this role, he developed and executed commercial device strategies for multiple launched biosimilar and oncology-focused combination products, including leading commercial efforts for a new SC formulation of the anti-cancer agent Pembrolizumab (Keytruda®). Before Merck, Phil spent 16 years at Becton-Dickinson, where he led advanced delivery technology initiatives, forming key partnerships with pharmaceutical companies. His work focused on technologies such as transdermal, intradermal, microneedle delivery systems, high-volume subcutaneous pumps, and various self-injection devices. Prior to Becton-Dickinson, Phil held several roles within transdermal and topical drug delivery at Novartis (Zyma) and L’Oréal/Galderma. Dr Green holds a BSc in Chemistry and an MSc in Medical Sciences from Bristol University (UK), a PhD in Pharmaceutical Chemistry from University of Wales, Cardiff (Welsh School of Pharmacy), and completed his post-doctoral training at the University of California, San Francisco.",
-    image: "/assets/image.png",
-    image_alt: "Philip Green, Ph.D. — President, Chesapeake Pharma",
-    badge_text: "Verified Biopharma Executive"
   },
   expertise_section: {
     title: "EXPERTISE",
@@ -183,8 +176,8 @@ export const defaultHomePageContent: HomePageContent = {
       "/assets/docx_images/image7.jpeg",
       "/assets/docx_images/image8.png",
       "/assets/docx_images/image9.png",
-      "/assets/docx_images/image5.png"
-    ]
+      "/assets/docx_images/image5.png",
+    ],
   },
   services_list: [
     {
@@ -195,8 +188,8 @@ export const defaultHomePageContent: HomePageContent = {
       points: [
         "Drug/device combination products",
         "High dose/large volume subcutaneous delivery",
-        "Novel injectable and skin-based delivery technologies"
-      ]
+        "Novel injectable and skin-based delivery technologies",
+      ],
     },
     {
       title: "Business Development",
@@ -206,8 +199,8 @@ export const defaultHomePageContent: HomePageContent = {
       points: [
         "Opportunity assessment (matching drugs to devices)",
         "High level commercial forecasting",
-        "Deal structuring"
-      ]
+        "Deal structuring",
+      ],
     },
     {
       title: "Pharmaceutical Pipeline Assessments",
@@ -216,9 +209,9 @@ export const defaultHomePageContent: HomePageContent = {
       icon: "CompetitiveIntel",
       points: [
         "Identification of key emerging trends",
-        "Competitive Intelligence."
-      ]
-    }
+        "Competitive Intelligence.",
+      ],
+    },
   ],
   focused_areas: [
     {
@@ -227,7 +220,7 @@ export const defaultHomePageContent: HomePageContent = {
       description:
         "Strategic commercialization and device selection for standard and high-concentration mAbs transitioning from hospital IV infusions to rapid, patient-administered subcutaneous formulations.",
       footer: "SC formulation & autoinjector integration",
-      image: "/assets/monoclonal antibodies 1.png"
+      image: "/assets/monoclonal antibodies 1.png",
     },
     {
       tag: "Dual-Targeting",
@@ -235,7 +228,7 @@ export const defaultHomePageContent: HomePageContent = {
       description:
         "Navigating complex dose optimization, target affinity balance, immunogenicity risks, and wearable infuser requirements for next-generation multi-specific antibody formats.",
       footer: "T-cell engagers & on-body delivery",
-      image: "/assets/bispecific antibodies 1.png"
+      image: "/assets/bispecific antibodies 1.png",
     },
     {
       tag: "Genetic Medicines",
@@ -243,31 +236,9 @@ export const defaultHomePageContent: HomePageContent = {
       description:
         "Formulation stabilization, lipid nanoparticle (LNP) delivery pathways, cold-chain considerations, and target delivery routing across mRNA, siRNA, and gene therapies.",
       footer: "mRNA, siRNA & LNP delivery pathways",
-      image: "/assets/nucleic acids 1.png"
-    }
+      image: "/assets/nucleic acids 1.png",
+    },
   ],
-  testimonials: [
-    {
-      logo: "Merck",
-      quote: "Dr. Green pharmaceutical clients to penetration pharma pharmaceutical company key clients.",
-      attribution: "Biologics Device Advisory"
-    },
-    {
-      logo: "Novartis",
-      quote: "Dr. Green has a highest pharmaceutical sporadically inovartis.",
-      attribution: "Combination Strategy Review"
-    },
-    {
-      logo: "Novartis",
-      quote: "Dr. Green has distinguished pharmaceutical surg strategy and usen imvental nnovartis.",
-      attribution: "Subcutaneous Transition"
-    },
-    {
-      logo: "Merck",
-      quote: "Dr. Green has euntelization pharmaceutical analytics and consultantfy pharmaceutial dest.",
-      attribution: "Formulation Analytics Lead"
-    }
-  ]
 };
 
 export const defaultAboutPageContent: AboutPageContent = {
@@ -285,20 +256,21 @@ export const defaultAboutPageContent: AboutPageContent = {
     {
       icon: "Compass",
       title: "Context first",
-      text: "Delivery decisions only make sense in their technical and commercial context."
+      text: "Delivery decisions only make sense in their technical and commercial context.",
     },
     {
       icon: "Eye",
       title: "Signal over noise",
-      text: "A clean view of the relevant fields is more useful than another crowded dashboard."
+      text: "A clean view of the relevant fields is more useful than another crowded dashboard.",
     },
     {
       icon: "Scale",
       title: "Transparent boundaries",
-      text: "Known, unknown, demo, pending, and active states should never be blurred."
-    }
+      text: "Known, unknown, demo, pending, and active states should never be blurred.",
+    },
   ],
-  footnote: "Content placeholders are intentionally marked for owner confirmation."
+  footnote:
+    "Content placeholders are intentionally marked for owner confirmation.",
 };
 
 export const defaultContactPageContent: ContactPageContent = {
@@ -311,7 +283,7 @@ export const defaultContactPageContent: ContactPageContent = {
   leadership_name: "Philip Green, Ph.D.",
   leadership_role: "President, Chesapeake Pharma LLC",
   summary:
-    "Specialized commercial strategy and technical advisory for drug delivery technologies, device integration, and IV-to-subcutaneous formulation transitions."
+    "Specialized commercial strategy and technical advisory for drug delivery technologies, device integration, and IV-to-subcutaneous formulation transitions.",
 };
 
 export const defaultPublicationsPageContent: PublicationsPageContent = {
@@ -331,7 +303,7 @@ export const defaultPublicationsPageContent: PublicationsPageContent = {
       doi: "https://doi.org/10.1080/19420862.2024.2402713",
       link: "https://doi.org/10.1080/19420862.2024.2402713",
       badge: "Systematic Review",
-      status: "Published"
+      status: "Published",
     },
     {
       id: "pub-2",
@@ -343,8 +315,7 @@ export const defaultPublicationsPageContent: PublicationsPageContent = {
       doi: "",
       link: "",
       badge: "Oncology Delivery",
-      status: "In Press"
-    }
-  ]
+      status: "In Press",
+    },
+  ],
 };
-
